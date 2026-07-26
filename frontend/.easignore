@@ -1,0 +1,12 @@
+node_modules/
+.expo/
+dist/
+web-build/
+builds/
+*.apk
+*.aab
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision

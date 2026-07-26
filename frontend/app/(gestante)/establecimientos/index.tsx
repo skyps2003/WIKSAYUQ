@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import * as Location from 'expo-location';
 import * as SecureStore from 'expo-secure-store';
+import NetInfo from '@react-native-community/netinfo';
 import { WebView } from 'react-native-webview';
 import { AppText } from '../../../src/components/AppText';
 import { useToast } from '../../../src/components/AppToast';
@@ -12,6 +13,8 @@ import { colors } from '../../../src/theme/colors';
 import { spacing } from '../../../src/theme/spacing';
 import { ScreenHeader } from '../../../src/components/ScreenHeader';
 import API_URL from '../../../src/config/api';
+import { fetchWithTimeout } from '../../../src/utils/fetchWithTimeout';
+import { OfflineDataService, PreferredHealthCenter } from '../../../src/services/offline-data.service';
 
 // Haversine formula to calculate distance between two coordinates
 const getDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -94,81 +97,84 @@ export default function EstablecimientosScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [establecimientos, setEstablecimientos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [preferredCenter, setPreferredCenter] = useState<PreferredHealthCenter | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
   const { showToast } = useToast();
   const nearestThree = establecimientos.slice(0, 3);
 
-  // Sort by distance whenever list changes
-  useEffect(() => {
-    setEstablecimientos(prev =>
-      [...prev].sort((a: any, b: any) => a.dist - b.dist)
-    );
-  }, [establecimientos.length]);
-
   useEffect(() => {
     (async () => {
-      // Get location permissions
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        showToast({ message: t('establecimientos.permiso_ubicacion'), type: 'info' });
-        setLoading(false);
-        return;
+      const network = await NetInfo.fetch();
+      const online = network.isConnected === true && network.isInternetReachable !== false;
+      setIsOnline(online);
+      setPreferredCenter(await OfflineDataService.getPreferredHealthCenter());
+
+      let currentLocation: Location.LocationObject | null = null;
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          currentLocation = await Location.getCurrentPositionAsync({});
+          setLocation(currentLocation);
+        }
+      } catch (error) {
+        console.error('Error getting location:', error);
       }
 
-      // Get user location
-      let loc = await Location.getCurrentPositionAsync({});
-      setLocation(loc);
-
-      // Fetch health centers from API (DB)
+      let centers = OfflineDataService.getCachedEstablishments();
       try {
         const token = await SecureStore.getItemAsync('userToken');
-        const response = await fetch(`${API_URL}/establecimientos`, {
+        const response = await fetchWithTimeout(`${API_URL}/establecimientos`, {
+          timeout: 12000,
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
-        
-        if (data.success && data.data) {
-          const list = data.data
-            .filter((e: any) => e.latitud && e.longitud)
-            .map((e: any) => {
-              const dist = getDistanceKm(
-                loc.coords.latitude, 
-                loc.coords.longitude, 
-                parseFloat(e.latitud), 
-                parseFloat(e.longitud)
-              );
-              return { ...e, dist, source: 'db' };
-            });
-          setEstablecimientos(list);
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || 'No se pudieron cargar los establecimientos');
         }
+
+        centers = data.data || [];
+        OfflineDataService.cacheEstablishments(centers);
       } catch (error) {
-        console.error(error);
+        console.error('Using cached health centers:', error);
       }
 
-      // Fetch nearby health centers from OpenStreetMap (Overpass API)
-      try {
-        const nearbyRes = await fetch(
-          `${API_URL}/nearby-health-centers?latitude=${loc.coords.latitude}&longitude=${loc.coords.longitude}&radius=5000`
-        );
-        const nearbyData = await nearbyRes.json();
-        if (nearbyData.success && nearbyData.data) {
-          const nearbyList = nearbyData.data.map((e: any) => ({
-            id: `nearby-${e.id}`,
-            nombre: e.name,
-            direccion: e.address,
-            latitud: String(e.latitude),
-            longitud: String(e.longitude),
-            telefono: e.phone,
-            tipo: e.type,
-            dist: e.distance / 1000, // metros a km
-            source: 'osm',
-          }));
-          setEstablecimientos(prev => [...prev, ...nearbyList]);
+      let list = centers
+        .filter((e: any) => e.latitud && e.longitud)
+        .map((e: any) => ({
+          ...e,
+          dist: currentLocation
+            ? getDistanceKm(currentLocation.coords.latitude, currentLocation.coords.longitude, parseFloat(e.latitud), parseFloat(e.longitud))
+            : Number.POSITIVE_INFINITY,
+          source: 'db',
+        }));
+
+      if (online && currentLocation) {
+        try {
+          const nearbyRes = await fetchWithTimeout(
+            `${API_URL}/nearby-health-centers?latitude=${currentLocation.coords.latitude}&longitude=${currentLocation.coords.longitude}&radius=5000`,
+            { timeout: 12000 }
+          );
+          const nearbyData = await nearbyRes.json();
+          if (nearbyRes.ok && nearbyData.success && nearbyData.data) {
+            list = [...list, ...nearbyData.data.map((e: any) => ({
+              id: `nearby-${e.id}`,
+              nombre: e.name,
+              direccion: e.address,
+              latitud: String(e.latitude),
+              longitud: String(e.longitude),
+              telefono: e.phone,
+              tipo: e.type,
+              dist: e.distance / 1000,
+              source: 'osm',
+            }))];
+          }
+        } catch (error) {
+          console.error('Error fetching nearby centers:', error);
         }
-      } catch (error) {
-        console.error('Error fetching nearby centers:', error);
-      } finally {
-        setLoading(false);
       }
+
+      setEstablecimientos(list.sort((a, b) => a.dist - b.dist));
+      setLoading(false);
     })();
   }, []);
 
@@ -204,7 +210,7 @@ export default function EstablecimientosScreen() {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           
           <View style={styles.mapContainer}>
-            {location ? (
+            {location && isOnline ? (
               <WebView
                 style={styles.map}
                 originWhitelist={['*']}
@@ -215,9 +221,9 @@ export default function EstablecimientosScreen() {
               />
             ) : (
               <View style={styles.noLocationBox}>
-                <MaterialCommunityIcons name="map-marker-off" size={40} color={colors.textSecondary} />
+                <MaterialCommunityIcons name={isOnline ? 'map-marker-off' : 'wifi-off'} size={40} color={colors.textSecondary} />
                 <AppText style={{ textAlign: 'center', marginTop: 8 }}>
-                  {t('establecimientos.permiso_ubicacion')}
+                  {isOnline ? t('establecimientos.permiso_ubicacion') : 'Sin internet: tus centros guardados siguen disponibles abajo.'}
                 </AppText>
               </View>
             )}
@@ -234,6 +240,19 @@ export default function EstablecimientosScreen() {
                 <AppText style={styles.nearestBadgeText}>km</AppText>
               </View>
             </View>
+
+            {preferredCenter ? (
+              <View style={styles.preferredCard}>
+                <View style={styles.preferredIcon}>
+                  <MaterialCommunityIcons name="hospital-building" size={24} color={colors.primary} />
+                </View>
+                <View style={styles.cardInfo}>
+                  <AppText variant="caption" color={colors.primary} style={styles.preferredLabel}>TU CENTRO DE SALUD</AppText>
+                  <AppText variant="h3" style={styles.cardTitle}>{preferredCenter.nombre}</AppText>
+                  <AppText variant="caption" color={colors.textSecondary}>Seleccionado durante tu registro</AppText>
+                </View>
+              </View>
+            ) : null}
 
             {nearestThree.length === 0 ? (
               <View style={styles.emptyCard}>
@@ -264,7 +283,7 @@ export default function EstablecimientosScreen() {
                     </AppText>
                   )}
                   <AppText variant="body2" color={colors.textSecondary}>
-                    {e.dist.toFixed(1)} km de tu ubicación
+                    {Number.isFinite(e.dist) ? `${e.dist.toFixed(1)} km de tu ubicación` : e.direccion || 'Ubicación disponible al conectarte'}
                   </AppText>
                 </View>
                 <TouchableOpacity 
@@ -274,8 +293,9 @@ export default function EstablecimientosScreen() {
                   <MaterialCommunityIcons name="phone" size={24} color={colors.textPrimary} />
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={styles.directionsButton}
+                  style={[styles.directionsButton, !Number.isFinite(e.dist) && { opacity: 0.4 }]}
                   onPress={() => openDirections(e.latitud, e.longitud)}
+                  disabled={!Number.isFinite(e.dist)}
                 >
                   <MaterialCommunityIcons name="directions" size={24} color={colors.primary} />
                 </TouchableOpacity>
@@ -380,6 +400,29 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  preferredCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
+    marginBottom: 12,
+  },
+  preferredIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.backgroundSoft,
+  },
+  preferredLabel: {
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    marginBottom: 2,
   },
   card: {
     flexDirection: 'row',

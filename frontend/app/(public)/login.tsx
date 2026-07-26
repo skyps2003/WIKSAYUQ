@@ -8,10 +8,12 @@ import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import NetInfo from '@react-native-community/netinfo';
 import API_URL from '../../src/config/api';
-import { fetchWithTimeout } from '../../src/utils/fetchWithTimeout';
+import { fetchWithTimeout, readApiResponse } from '../../src/utils/fetchWithTimeout';
 import { clearUserSessionData } from '../../src/utils/userSession';
 import { calculateGestationalWeeks, getTrimesterKey } from '../../src/utils/gestation';
+import { OfflineDataService } from '../../src/services/offline-data.service';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -20,10 +22,26 @@ export default function LoginScreen() {
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loginStatus, setLoginStatus] = useState('');
   const [showLanguageSelection, setShowLanguageSelection] = useState(false);
   const [dialog, setDialog] = useState({ visible: false, title: '', message: '' });
 
   const showError = (title: string, message: string) => setDialog({ visible: true, title, message });
+
+  const requestLogin = async (timeout: number) => {
+    const response = await fetchWithTimeout(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dni, pin }),
+      timeout,
+    });
+
+    if ([502, 503, 504].includes(response.status)) {
+      throw new Error(`SERVER_STARTING_${response.status}`);
+    }
+
+    return response;
+  };
 
   useEffect(() => {
     const loadLanguagePreference = async () => {
@@ -40,15 +58,30 @@ export default function LoginScreen() {
       return;
     }
     
+    const network = await NetInfo.fetch();
+    if (network.isConnected === false || network.isInternetReachable === false) {
+      showError('Sin conexión', 'Conéctate a internet para iniciar sesión. Después podrás usar las funciones guardadas sin conexión.');
+      return;
+    }
+
     setLoading(true);
+    setLoginStatus('Conectando...');
+    const slowServerTimer = setTimeout(() => {
+      setLoginStatus('Iniciando servidor, espera...');
+    }, 4000);
+
     try {
-      const response = await fetchWithTimeout(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dni, pin }),
-        timeout: 5000 // 5 seconds timeout
-      });
-      const result = await response.json();
+      let response: Response;
+      try {
+        response = await requestLogin(45000);
+      } catch (firstError) {
+        console.warn('Primer intento de login falló; reintentando:', firstError);
+        setLoginStatus('Servidor iniciando, reintentando...');
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        response = await requestLogin(30000);
+      }
+
+      const result = await readApiResponse<any>(response);
 
       if (result.success) {
         await clearUserSessionData();
@@ -74,11 +107,13 @@ export default function LoginScreen() {
           }
         }
 
-        if (user.establecimiento_id) {
-          await SecureStore.setItemAsync('userCentroSaludId', user.establecimiento_id);
-        }
-        if (user.centro_salud) {
-          await SecureStore.setItemAsync('userCentroSalud', user.centro_salud);
+        const preferredCenter = user.establecimiento_id && user.centro_salud
+          ? { id: user.establecimiento_id, nombre: user.centro_salud }
+          : await OfflineDataService.getPreferredHealthCenter(user.dni);
+        if (preferredCenter) {
+          await SecureStore.setItemAsync('userCentroSaludId', preferredCenter.id);
+          await SecureStore.setItemAsync('userCentroSalud', preferredCenter.nombre);
+          await OfflineDataService.savePreferredHealthCenter(preferredCenter, user.dni);
         }
         
         if (user.rol === 'PERSONAL_SALUD') {
@@ -91,9 +126,14 @@ export default function LoginScreen() {
       }
     } catch (error) {
       console.error(error);
-      showError("Error", "No se pudo conectar con el servidor.");
+      showError(
+        'Servidor no disponible',
+        'El servidor tardó demasiado en responder. Espera un momento y vuelve a intentar.'
+      );
     } finally {
+      clearTimeout(slowServerTimer);
       setLoading(false);
+      setLoginStatus('');
     }
   };
 
@@ -104,8 +144,8 @@ export default function LoginScreen() {
   };
 
   return (
-    <ImageBackground 
-      source={require('../../assets/images/login_bg.png')} 
+    <ImageBackground
+      source={require('../../assets/images/login_bg.jpg')}
       style={styles.backgroundImage}
       resizeMode="cover"
     >
@@ -222,7 +262,7 @@ export default function LoginScreen() {
                 disabled={loading}
               >
                 <AppText variant="body1" style={styles.primaryButtonText}>
-                  {loading ? t('login.verificando') : t('login.ingresar')}
+                  {loading ? loginStatus || t('login.verificando') : t('login.ingresar')}
                 </AppText>
               </TouchableOpacity>
               

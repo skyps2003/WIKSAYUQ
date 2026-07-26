@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Linking } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Linking, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -14,6 +14,9 @@ import { useToast } from '../../src/components/AppToast';
 import { colors } from '../../src/theme/colors';
 import { spacing, radius } from '../../src/theme/spacing';
 import API_URL from '../../src/config/api';
+import { fetchWithTimeout } from '../../src/utils/fetchWithTimeout';
+import { SyncService } from '../../src/services/sync/sync.service';
+import { OfflineDataService } from '../../src/services/offline-data.service';
 
 export default function ContactosScreen() {
   const router = useRouter();
@@ -37,15 +40,20 @@ export default function ContactosScreen() {
   const fetchContactos = async () => {
     try {
       const token = await SecureStore.getItemAsync('userToken');
-      const response = await fetch(`${API_URL}/contactos`, {
+      const response = await fetchWithTimeout(`${API_URL}/contactos`, {
+        timeout: 12000,
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const result = await response.json();
-      if (result.success) {
-        setContactos(result.data);
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'No se pudieron cargar los contactos');
       }
+
+      setContactos(result.data);
+      await OfflineDataService.cacheContacts(result.data);
     } catch (error) {
       console.error(error);
+      setContactos(await OfflineDataService.getCachedContacts());
     } finally {
       setLoading(false);
     }
@@ -68,24 +76,35 @@ export default function ContactosScreen() {
     
     setIsSubmitting(true);
     try {
-      const token = await SecureStore.getItemAsync('userToken');
-      const response = await fetch(`${API_URL}/contactos`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ nombres, parentesco, telefono_principal: telefono })
+      const result = await SyncService.saveOrQueue({
+        tableName: 'contactos',
+        data: { nombres, parentesco, telefono_principal: telefono }
       });
-      
-      const result = await response.json();
+
       if (result.success) {
-        showToast({ message: t('contactos.exito_agregar'), type: 'success' });
+        const contacto = result.queued
+          ? {
+              id: result.localId,
+              nombres,
+              parentesco,
+              telefono_principal: telefono,
+              es_contacto_principal: contactos.length === 0,
+              sync_status: 'PENDING',
+            }
+          : result.data;
+        const updatedContactos = [...contactos, contacto];
+
+        setContactos(updatedContactos);
+        await OfflineDataService.cacheContacts(updatedContactos);
+        showToast({
+          message: result.queued ? 'Contacto guardado sin internet. Se sincronizará al reconectar.' : t('contactos.exito_agregar'),
+          type: 'success',
+          duration: 4500,
+        });
         setModalVisible(false);
         setNombres('');
         setParentesco('');
         setTelefono('');
-        fetchContactos();
       } else {
         showToast({ message: result.message || t('contactos.error_conexion'), type: 'error' });
       }
@@ -293,9 +312,19 @@ export default function ContactosScreen() {
       />
 
       {/* Modal Agregar Contacto */}
-      <Modal visible={modalVisible} animationType="slide" transparent={true}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+      <Modal visible={modalVisible} animationType="slide" transparent={true} onRequestClose={() => setModalVisible(false)}>
+        <KeyboardAvoidingView
+          style={styles.modalKeyboard}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.modalOverlay}>
+            <ScrollView
+              contentContainerStyle={styles.modalScrollContent}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <AppText variant="h2">{t('contactos.nuevo')}</AppText>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
@@ -334,14 +363,16 @@ export default function ContactosScreen() {
               />
             </View>
 
-            <AppButton 
-              title={t('contactos.agregar')}
-              onPress={handleAgregar}
-              disabled={isSubmitting}
-              style={{ marginTop: spacing.m }}
-            />
+                <AppButton
+                  title={t('contactos.agregar')}
+                  onPress={handleAgregar}
+                  loading={isSubmitting}
+                  style={{ marginTop: spacing.m }}
+                />
+              </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
     </SafeAreaView>
@@ -427,6 +458,12 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  modalKeyboard: {
+    flex: 1,
+  },
+  modalScrollContent: {
+    flexGrow: 1,
     justifyContent: 'flex-end',
   },
   modalContent: {

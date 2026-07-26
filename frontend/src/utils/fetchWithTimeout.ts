@@ -4,11 +4,25 @@ export const fetchWithTimeout = async (resource: RequestInfo, options: RequestIn
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
-  const response = await fetch(resource, {
-    ...options,
-    signal: controller.signal  
-  });
-  clearTimeout(id);
+  try {
+    return await fetch(resource, {
+      ...options,
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(id);
+  }
+};
 
-  return response;
+export const readApiResponse = async <T extends { success: boolean; message?: string }>(response: Response): Promise<T> => {
+  const body = await response.text();
+
+  try {
+    return JSON.parse(body) as T;
+  } catch {
+    return {
+      success: false,
+      message: body || `El servidor respondió con estado ${response.status}`,
+    } as T;
+  }
 };

@@ -13,6 +13,8 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import * as SecureStore from 'expo-secure-store';
 import API_URL from '../../../src/config/api';
+import { fetchWithTimeout } from '../../../src/utils/fetchWithTimeout';
+import { OfflineDataService } from '../../../src/services/offline-data.service';
 
 export default function SosScreen() {
   const router = useRouter();
@@ -42,15 +44,20 @@ export default function SosScreen() {
   const fetchContacts = async () => {
     try {
       const token = await SecureStore.getItemAsync('userToken');
-      const response = await fetch(`${API_URL}/contactos`, {
+      const response = await fetchWithTimeout(`${API_URL}/contactos`, {
+        timeout: 12000,
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const result = await response.json();
-      if (result.success) {
-        setContacts(result.data);
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'No se pudieron cargar los contactos');
       }
+
+      setContacts(result.data);
+      await OfflineDataService.cacheContacts(result.data);
     } catch (error) {
       console.error('Error fetching contacts for SOS:', error);
+      setContacts(await OfflineDataService.getCachedContacts());
     }
   };
 

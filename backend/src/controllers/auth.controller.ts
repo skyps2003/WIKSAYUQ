@@ -25,11 +25,47 @@ export const register = async (req: Request, res: Response) => {
 
     // Check if user already exists
     const existingPerfil = await prisma.perfiles.findUnique({
-      where: { numero_documento: dni }
+      where: { numero_documento: dni },
+      include: { auth_users: true },
     });
 
     if (existingPerfil) {
-      return res.status(400).json({ success: false, message: 'El usuario ya existe con este DNI' });
+      const sameCredentials = existingPerfil.auth_users?.encrypted_password
+        ? await bcrypt.compare(pin, existingPerfil.auth_users.encrypted_password)
+        : false;
+
+      if (!sameCredentials) {
+        return res.status(409).json({
+          success: false,
+          code: 'USER_EXISTS',
+          message: 'Este DNI ya tiene una cuenta. Inicia sesión con tu PIN.',
+        });
+      }
+
+      const token = jwt.sign({ id: existingPerfil.id, rol: existingPerfil.rol }, JWT_SECRET, { expiresIn: '30d' });
+      return res.status(200).json({
+        success: true,
+        data: {
+          token,
+          user: {
+            id: existingPerfil.id,
+            dni: existingPerfil.numero_documento,
+            nombres: existingPerfil.nombres,
+            apellido_paterno: existingPerfil.apellido_paterno,
+            apellido_materno: existingPerfil.apellido_materno,
+            sexo: existingPerfil.sexo,
+            telefono: existingPerfil.telefono,
+            direccion: existingPerfil.direccion,
+            idioma_preferido: existingPerfil.idioma_preferido,
+            rol: existingPerfil.rol,
+            foto_url: existingPerfil.foto_url,
+            foto_base64: existingPerfil.foto_base64,
+            acepta_terminos: existingPerfil.acepta_terminos,
+            acepta_tratamiento_datos: existingPerfil.acepta_tratamiento_datos,
+            fecha_nacimiento: existingPerfil.fecha_nacimiento,
+          },
+        },
+      });
     }
 
     // Hash the PIN/Password

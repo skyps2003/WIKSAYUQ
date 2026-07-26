@@ -16,6 +16,8 @@ import { DatePickerModal } from '../../../src/components/DatePickerModal';
 import { useKeyboardHeight } from '../../../src/hooks/useKeyboardHeight';
 import { SyncService } from '../../../src/services/sync/sync.service';
 import API_URL from '../../../src/config/api';
+import { fetchWithTimeout } from '../../../src/utils/fetchWithTimeout';
+import { OfflineDataService } from '../../../src/services/offline-data.service';
 
 type FormFieldProps = {
   label: string;
@@ -158,22 +160,31 @@ export default function ControlesRegistroScreen() {
   }, [establecimientos, findNearestCenters]);
 
   const fetchMasterData = async () => {
+    let list = OfflineDataService.getCachedEstablishments();
+
     try {
       const token = await SecureStore.getItemAsync('userToken');
-      const resEst = await fetch(`${API_URL}/establecimientos`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const resEst = await fetchWithTimeout(`${API_URL}/establecimientos`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        timeout: 12000,
+      });
       const dataEst = await resEst.json();
-      if (dataEst.success) {
-        let list = dataEst.data;
-        const centroId = await SecureStore.getItemAsync('userCentroSaludId');
-        const centroName = await SecureStore.getItemAsync('userCentroSalud');
-        if (centroId === 'custom' && centroName && !list.some((e: any) => e.id === 'custom')) {
-          list = [{ id: 'custom', nombre: centroName }, ...list];
-        }
-        setEstablecimientos(list);
+      if (!resEst.ok || !dataEst.success) {
+        throw new Error(dataEst.message || 'No se pudieron cargar los establecimientos');
       }
+
+      list = dataEst.data || [];
+      OfflineDataService.cacheEstablishments(list);
     } catch (e) {
-      console.error(e);
+      console.error('Using cached health centers:', e);
     }
+
+    const centroId = await SecureStore.getItemAsync('userCentroSaludId');
+    const centroName = await SecureStore.getItemAsync('userCentroSalud');
+    if (centroId === 'custom' && centroName && !list.some((e: any) => e.id === 'custom')) {
+      list = [{ id: 'custom', nombre: centroName }, ...list];
+    }
+    setEstablecimientos(list);
   };
 
   const handleSaveControl = async () => {
@@ -186,7 +197,7 @@ export default function ControlesRegistroScreen() {
       const fum = await SecureStore.getItemAsync('userFum');
       const data = await SyncService.saveOrQueue({
         tableName: 'controles',
-        data: { fecha_control: dateControl.toISOString(), establecimiento_id: estControl, peso_kg: peso, presion_sistolica: paSis, presion_diastolica: paDia, fum }
+        data: { fecha_control: dateControl.toISOString(), establecimiento_id: estControl === 'custom' ? null : estControl, peso_kg: peso, presion_sistolica: paSis, presion_diastolica: paDia, fum }
       });
       if (data.success) {
         showToast({ message: data.queued ? 'Control guardado sin internet. Se sincronizará luego.' : `Control ${t('controles.exito_guardar')}`, type: 'success' });
@@ -213,7 +224,7 @@ export default function ControlesRegistroScreen() {
       combinedDate.setMinutes(timeCita.getMinutes());
       const data = await SyncService.saveOrQueue({
         tableName: 'citas',
-        data: { fecha_programada: combinedDate.toISOString(), establecimiento_id: estCita, motivo, tipo: 'OTRO', fum }
+        data: { fecha_programada: combinedDate.toISOString(), establecimiento_id: estCita === 'custom' ? null : estCita, motivo, tipo: 'OTRO', fum }
       });
       if (data.success) {
         showToast({ message: data.queued ? 'Cita guardada sin internet. Se sincronizará luego.' : `Cita ${t('controles.exito_guardar')}`, type: 'success' });
@@ -235,7 +246,7 @@ export default function ControlesRegistroScreen() {
     setLoading(true);
     try {
       const fum = await SecureStore.getItemAsync('userFum');
-      const body: any = { nombre_vacuna: nombreVacuna, descripcion_vacuna: descripcionVacuna || null, establecimiento_id: estVacuna, estado: vacunaEstado, fum };
+      const body: any = { nombre_vacuna: nombreVacuna, descripcion_vacuna: descripcionVacuna || null, establecimiento_id: estVacuna === 'custom' ? null : estVacuna, estado: vacunaEstado, fum };
       if (vacunaEstado === 'APLICADA') {
         body.fecha_aplicacion = dateVacuna.toISOString();
       } else {

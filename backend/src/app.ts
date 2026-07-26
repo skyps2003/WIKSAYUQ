@@ -9,20 +9,44 @@ dotenv.config();
 
 const app: Application = express();
 
+// Render terminates TLS at its proxy and forwards the original client address.
+app.set('trust proxy', 1);
+
 // Security Middlewares
 app.use(helmet());
 app.use(cors({ origin: process.env.CORS_ORIGINS || '*' }));
 app.use(express.json({ limit: '8mb' })); // Para aceptar Base64 grandes según MAX_BASE64_IMAGE_MB
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '8mb' }));
 app.use(morgan('dev'));
 
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // Límite de 100 peticiones por IP por ventana
-  message: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo más tarde.',
+  limit: 500,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    code: 'RATE_LIMITED',
+    message: 'Demasiadas solicitudes. Espera unos minutos e intenta nuevamente.',
+  },
+  skip: (req) => req.path === '/health',
 });
 app.use('/api/', limiter);
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  keyGenerator: (req) => typeof req.body?.dni === 'string' ? req.body.dni : 'missing-dni',
+  message: {
+    success: false,
+    code: 'AUTH_RATE_LIMITED',
+    message: 'Demasiados intentos para este DNI. Espera 15 minutos e intenta nuevamente.',
+  },
+});
 
 // Basic Health Endpoint
 app.get('/api/health', (req: Request, res: Response) => {
@@ -50,7 +74,7 @@ import controlesRoutes from './routes/controles.routes';
 import nearbyHealthCentersRoutes from './routes/nearby-health-centers.routes';
 
 // Rutas base
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/gestantes', gestantesRoutes);
 app.use('/api/conversaciones', conversacionesRoutes);
 app.use('/api/reniec', reniecRoutes);
@@ -74,7 +98,11 @@ app.use((req: Request, res: Response) => {
 // Error Handler Global (por implementar detalle)
 app.use((err: any, req: Request, res: Response, next: any) => {
   console.error(err.stack);
-  res.status(500).json({ success: false, message: 'Error interno del servidor', errors: [err.message] });
+  const status = Number(err.status || err.statusCode) || 500;
+  const message = status === 413
+    ? 'La imagen seleccionada es demasiado grande. Intenta con otra imagen.'
+    : 'Error interno del servidor';
+  res.status(status).json({ success: false, message, errors: [err.message] });
 });
 
 export default app;

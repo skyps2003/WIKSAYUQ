@@ -13,10 +13,14 @@ import * as SecureStore from 'expo-secure-store';
 import API_URL from '../../src/config/api';
 import { clearUserSessionData } from '../../src/utils/userSession';
 import { useKeyboardHeight } from '../../src/hooks/useKeyboardHeight';
+import { fetchWithTimeout, readApiResponse } from '../../src/utils/fetchWithTimeout';
+import { useToast } from '../../src/components/AppToast';
+import { OfflineDataService } from '../../src/services/offline-data.service';
 
 export default function RegistroScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { showToast } = useToast();
   const keyboardHeight = useKeyboardHeight();
   
   const [nombres, setNombres] = useState('');
@@ -44,31 +48,42 @@ export default function RegistroScreen() {
   const [modalType, setModalType] = useState<'provincia' | 'distrito'>('provincia');
   const [loadingData, setLoadingData] = useState(false);
   const [loadingProvincias, setLoadingProvincias] = useState(true);
+  const [provinciasError, setProvinciasError] = useState('');
+  const [registering, setRegistering] = useState(false);
   const [fotoBase64, setFotoBase64] = useState<string | null>(null);
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [aceptaTratamiento, setAceptaTratamiento] = useState(false);
   const [dniError, setDniError] = useState('');
 
+  const loadProvincias = async () => {
+    try {
+      setLoadingProvincias(true);
+      setProvinciasError('');
+      console.log('[API] Cargando provincias desde:', `${API_URL}/ubigeo/provincias/00000000-0000-0000-0000-000000000003`);
+      const res = await fetchWithTimeout(`${API_URL}/ubigeo/provincias/00000000-0000-0000-0000-000000000003`, { timeout: 15000 });
+      const json = await res.json();
+      console.log('[API] Provincias respuesta:', json.success ? `${json.data?.length} provincias` : 'error');
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || 'No se pudieron cargar las provincias');
+      }
+
+      setProvinciasList(json.data || []);
+    } catch (e: any) {
+      console.error('[API] Error loading provincias:', e?.message || e);
+      setProvinciasError('No se pudieron cargar las provincias. Puedes reintentar o continuar sin seleccionar ubicación.');
+      showToast({
+        message: 'No se pudieron cargar provincias. Puedes reintentar o continuar.',
+        type: 'info',
+        duration: 4500,
+      });
+    } finally {
+      setLoadingProvincias(false);
+    }
+  };
+
   // Cargar provincias de Apurímac al montar
   useEffect(() => {
-    const loadProvincias = async () => {
-      try {
-        setLoadingProvincias(true);
-        console.log('[API] Cargando provincias desde:', `${API_URL}/ubigeo/provincias/00000000-0000-0000-0000-000000000003`);
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
-        const res = await fetch(`${API_URL}/ubigeo/provincias/00000000-0000-0000-0000-000000000003`, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        const json = await res.json();
-        console.log('[API] Provincias respuesta:', json.success ? `${json.data?.length} provincias` : 'error');
-        if (json.success) setProvinciasList(json.data);
-      } catch (e: any) {
-        console.error('[API] Error loading provincias:', e?.message || e);
-        Alert.alert('Error', 'No se pudieron cargar las provincias. Verifica la conexión al servidor.');
-      } finally {
-        setLoadingProvincias(false);
-      }
-    };
     loadProvincias();
   }, []);
 
@@ -83,10 +98,7 @@ export default function RegistroScreen() {
     try {
       setDniError('');
       setLoadingDni(true);
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
-      const res = await fetch(`${API_URL}/reniec/${dni}`, { signal: controller.signal });
-      clearTimeout(timeoutId);
+      const res = await fetchWithTimeout(`${API_URL}/reniec/${dni}`, { timeout: 12000 });
       const data = await res.json();
       if (data.success && data.data) {
         setNombres(data.data.nombres || '');
@@ -115,10 +127,13 @@ export default function RegistroScreen() {
     if (type === 'distrito' && provincia) {
       setLoadingData(true);
       try {
-        const res = await fetch(`${API_URL}/ubigeo/distritos/${provincia.id}`);
+        const res = await fetchWithTimeout(`${API_URL}/ubigeo/distritos/${provincia.id}`, { timeout: 12000 });
         const data = await res.json();
         if (data.success) setDistritosList(data.data);
-      } catch (e) { console.error(e); }
+      } catch (e) {
+        console.error(e);
+        showToast({ message: 'No se pudieron cargar distritos. Intenta otra vez.', type: 'error' });
+      }
       finally { setLoadingData(false); }
     }
   };
@@ -175,6 +190,7 @@ export default function RegistroScreen() {
 
   const handleRegister = async () => {
     try {
+      setRegistering(true);
       if (!dni || !nombres || !pin || pin.length < 4) {
         Alert.alert("Campos incompletos", "Por favor ingresa tu DNI, Nombres y un PIN de 4 dígitos.");
         return;
@@ -187,7 +203,7 @@ export default function RegistroScreen() {
       const centroSaludFinal = centroSaludNombre.trim()
         ? { id: 'custom', nombre: centroSaludNombre.trim() }
         : null;
-      const response = await fetch(`${API_URL}/auth/register`, {
+      const registerOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -205,9 +221,19 @@ export default function RegistroScreen() {
           acepta_terminos: aceptaTerminos,
           acepta_tratamiento_datos: aceptaTratamiento,
           idioma_preferido: 'ESPANOL',
-        })
-      });
-      const result = await response.json();
+        }),
+      };
+      let response: Response;
+      try {
+        response = await fetchWithTimeout(`${API_URL}/auth/register`, { ...registerOptions, timeout: 45000 });
+        if ([502, 503, 504].includes(response.status)) throw new Error(`SERVER_STARTING_${response.status}`);
+      } catch (firstError) {
+        console.warn('Primer intento de registro falló; reintentando:', firstError);
+        showToast({ message: 'Servidor iniciando. Reintentando registro...', type: 'info', duration: 3000 });
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        response = await fetchWithTimeout(`${API_URL}/auth/register`, { ...registerOptions, timeout: 30000 });
+      }
+      const result = await readApiResponse<any>(response);
 
       if (!result.success) {
         Alert.alert("Error en Registro", result.message || "Error al crear la cuenta");
@@ -248,6 +274,7 @@ export default function RegistroScreen() {
       if (centroSaludFinal) {
         await SecureStore.setItemAsync('userCentroSaludId', centroSaludFinal.id);
         await SecureStore.setItemAsync('userCentroSalud', centroSaludFinal.nombre);
+        await OfflineDataService.savePreferredHealthCenter(centroSaludFinal, user.dni || dni);
       }
       await SecureStore.setItemAsync('userWeeks', semanas.toString());
       await SecureStore.setItemAsync('userTrimester', trimestre);
@@ -257,7 +284,13 @@ export default function RegistroScreen() {
       router.replace('/(gestante)/(tabs)/inicio' as any);
     } catch (e) {
       console.error(e);
-      Alert.alert("Error", "Ocurrió un error conectando al servidor");
+      showToast({
+        message: 'No se pudo conectar con el servidor. Revisa tu internet e intenta otra vez.',
+        type: 'error',
+        duration: 4500,
+      });
+    } finally {
+      setRegistering(false);
     }
   };
 
@@ -430,6 +463,7 @@ export default function RegistroScreen() {
           <TouchableOpacity 
             style={styles.inputWithIcon} 
             onPress={() => openModal('provincia')}
+            disabled={loadingProvincias}
           >
             <TextInput 
               style={[styles.inputField, { color: provincia ? theme.colors.textPrimary : theme.colors.textSecondary }]} 
@@ -445,6 +479,22 @@ export default function RegistroScreen() {
               <MaterialCommunityIcons name="chevron-down" size={24} color={theme.colors.textSecondary} />
             )}
           </TouchableOpacity>
+
+          {provinciasError ? (
+            <View style={styles.inlineNotice}>
+              <MaterialCommunityIcons name="wifi-alert" size={18} color={theme.colors.terracotta} />
+              <AppText variant="caption" color={theme.colors.terracotta} style={styles.inlineNoticeText}>
+                {provinciasError}
+              </AppText>
+              <TouchableOpacity onPress={loadProvincias} disabled={loadingProvincias} style={styles.retryButton}>
+                {loadingProvincias ? (
+                  <ActivityIndicator size="small" color={theme.colors.primary} />
+                ) : (
+                  <AppText variant="caption" color={theme.colors.primary} style={styles.retryText}>Reintentar</AppText>
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : null}
 
           {/* Distrito */}
           <TouchableOpacity 
@@ -464,14 +514,14 @@ export default function RegistroScreen() {
           </TouchableOpacity>
 
           {/* Comunidad / centro poblado - entrada directa */}
-          <View style={[styles.inputWithIcon, !distrito && { opacity: 0.4 }]}> 
+          <View style={[styles.inputWithIcon, !distrito && !provinciasError && { opacity: 0.4 }]}>
             <TextInput 
               style={styles.inputField}
-              placeholder={!distrito ? 'Selecciona un distrito primero' : 'Centro poblado / comunidad'}
+              placeholder={!distrito && !provinciasError ? 'Selecciona un distrito primero' : 'Centro poblado / comunidad'}
               placeholderTextColor={theme.colors.textSecondary} 
               value={comunidad}
               onChangeText={setComunidad}
-              editable={!!distrito}
+              editable={!!distrito || !!provinciasError}
             />
             <MaterialCommunityIcons name="home-map-marker" size={22} color={theme.colors.primary} />
           </View>
@@ -515,6 +565,7 @@ export default function RegistroScreen() {
           <AppButton 
             title={t('registro.siguiente')}
             onPress={handleRegister}
+            loading={registering}
             style={styles.nextButton}
           />
         </View>
@@ -596,5 +647,9 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 15, paddingVertical: 4, color: '#333' },
   modalLoading: { padding: 40, alignItems: 'center' },
   modalItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+  inlineNotice: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FFF7EF', borderWidth: 1, borderColor: '#F0D3BC', borderRadius: 12, padding: 12 },
+  inlineNoticeText: { flex: 1, lineHeight: 18 },
+  retryButton: { minWidth: 72, alignItems: 'center', paddingVertical: 4 },
+  retryText: { fontWeight: '700' },
 
 });
