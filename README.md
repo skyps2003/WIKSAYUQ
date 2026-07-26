@@ -3,65 +3,57 @@
 
 Proyecto de aplicación móvil para el seguimiento prenatal de gestantes en zonas altoandinas del Perú.
 
-## Estructura del Proyecto
+## Arquitectura del Proyecto
 
-El proyecto está dividido en dos partes principales y funciona como un monorepo (npm workspaces):
-- `backend/`: API RESTful construida con Node.js, Express, TypeScript y Prisma (PostgreSQL).
-- `frontend/`: Aplicación móvil construida con React Native y Expo, soportando funcionalidad offline-first mediante SQLite.
+El proyecto está dividido en dos partes principales:
+- **Backend y Base de Datos:** Alojados en la nube. La API RESTful (Node.js, Express, TypeScript, Prisma) y la base de datos PostgreSQL ya están desplegados y funcionando remotamente.
+- **Frontend (Mobile App):** Aplicación móvil construida con React Native y Expo, que se conecta a la API en la nube y soporta funcionalidad offline-first mediante SQLite.
 
 ## Requisitos Previos
 - Node.js v18+
-- Base de datos PostgreSQL local corriendo en el puerto 5432 con la base `wiksayuq_db`.
+- Aplicación [Expo Go](https://expo.dev/client) instalada en tu dispositivo físico (Android/iOS) o un emulador correctamente configurado.
 
-## Instrucciones de Ejecución
+## Instrucciones de Instalación y Ejecución
 
-### 1. Configuración de Base de Datos y Backend
+Dado que el **backend y la base de datos se encuentran en la nube**, solo necesitas instalar y ejecutar el entorno frontend para probar la aplicación.
 
-```bash
-cd backend
-npm install
-```
-Luego, copia el archivo de entorno de ejemplo:
-```bash
-cp .env.example .env
-```
-Abre `.env` y completa `DATABASE_URL` con la contraseña de tu usuario `postgres`.
-Ejecuta Prisma para conectar a la base de datos existente y generar el cliente:
-```bash
-npx prisma db pull
-npx prisma generate
-```
-Inicia el servidor en modo desarrollo:
-```bash
-npm run dev
-```
+### 1. Configuración del Frontend
 
-### 2. Configuración del Frontend
-
-Abre otra terminal:
+Abre una terminal y navega a la carpeta del frontend:
 ```bash
 cd frontend
+```
+
+Instala las dependencias del proyecto:
+```bash
 npm install
 ```
-Copia el archivo de entorno:
+
+Crea tu archivo de variables de entorno:
 ```bash
 cp .env.example .env
 ```
-Asegúrate de que `EXPO_PUBLIC_API_URL` apunte a la IP o dominio correcto donde corre el backend.
-- Para Android Emulator usa: `http://10.0.2.2:3000/api`
-- Para iOS Simulator usa: `http://localhost:3000/api`
-- Para un dispositivo físico en tu red WiFi usa: `http://<TU_IP_LOCAL>:3000/api`
+*(Nota: Si usas Windows, puedes simplemente copiar y pegar el archivo `.env.example` y renombrarlo a `.env`)*
 
-Inicia la aplicación en Expo:
+Abre el archivo `.env` recién creado y asegúrate de que la variable `EXPO_PUBLIC_API_URL` esté apuntando a la URL del backend en la nube.
+Ejemplo:
+```env
+EXPO_PUBLIC_API_URL=https://api.tu-dominio-en-la-nube.com/api
+```
+
+### 2. Ejecutar la Aplicación
+
+Inicia el servidor de desarrollo de Expo:
 ```bash
 npx expo start
 ```
 
+Una vez que se inicie el servidor, verás un código QR en tu terminal:
+- **Dispositivo físico:** Escanea el código QR usando la app Expo Go (en Android) o la aplicación de Cámara (en iOS).
+- **Emuladores:** Presiona `a` en la terminal para abrir el Android Emulator o `i` para abrir el iOS Simulator.
+
 ## Solución de Problemas
 
-- **Contraseña incorrecta de PostgreSQL**: Asegúrate de actualizar el archivo `.env` en `backend/` y reiniciar el servidor.
-- **Puerto 5432 ocupado**: Verifica si hay otra instancia de Postgres corriendo o cambia el puerto en `.env`.
-- **Backend no accesible desde emulador o celular físico**: Revisa las IPs en `frontend/.env` y asegúrate de que el firewall de Windows permita conexiones entrantes al puerto 3000.
-- **Prisma no conecta**: Revisa que la base de datos `wiksayuq_db` exista.
-- **Imagen Base64 demasiado grande**: Hay un límite en `MAX_BASE64_IMAGE_MB=2` en el backend. Imágenes más pesadas serán rechazadas.
-# WIKSAYUQ
+- **La app no conecta al backend o no carga datos:** Verifica que tu dispositivo móvil tenga conexión a internet y que la URL definida en `EXPO_PUBLIC_API_URL` sea correcta.
+- **Problemas al instalar dependencias:** Asegúrate de estar usando una versión reciente de Node.js (v18 o superior). Puedes borrar la carpeta `node_modules` y ejecutar `npm install` nuevamente.
+- **Los cambios en el `.env` no se reflejan:** Si cambiaste la URL del backend, reinicia el servidor de Expo limpiando la caché ejecutando: `npx expo start -c`.
