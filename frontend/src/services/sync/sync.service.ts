@@ -2,8 +2,9 @@ import { db } from '../../database';
 import NetInfo from '@react-native-community/netinfo';
 import * as SecureStore from 'expo-secure-store';
 import API_URL from '../../config/api';
+import { OfflineDataService } from '../offline-data.service';
 
-type QueueTable = 'controles' | 'citas' | 'vacunas';
+type QueueTable = 'controles' | 'citas' | 'vacunas' | 'contactos';
 
 type QueueItem = {
   id: string;
@@ -21,6 +22,7 @@ const ENDPOINTS: Record<QueueTable, string> = {
   controles: '/controles',
   citas: '/citas',
   vacunas: '/vacunas/mis-vacunas',
+  contactos: '/contactos',
 };
 
 const createLocalId = () => `local-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -30,8 +32,8 @@ export class SyncService {
     const netInfo = await NetInfo.fetch();
 
     if (!netInfo.isConnected || netInfo.isInternetReachable === false) {
-      this.enqueue(tableName, data);
-      return { success: true, queued: true };
+      const localId = this.enqueue(tableName, data);
+      return { success: true, queued: true, localId };
     }
 
     try {
@@ -45,8 +47,8 @@ export class SyncService {
       await this.sync();
       return { success: true, queued: false, data: json.data };
     } catch {
-      this.enqueue(tableName, data);
-      return { success: true, queued: true };
+      const localId = this.enqueue(tableName, data);
+      return { success: true, queued: true, localId };
     }
   }
 
@@ -90,6 +92,10 @@ export class SyncService {
 
         if (!response.ok || !json.success) {
           throw new Error(json.message || 'No se pudo sincronizar');
+        }
+
+        if (item.table_name === 'contactos') {
+          await OfflineDataService.replaceCachedContact(item.id, json.data);
         }
 
         db.runSync('UPDATE sync_queue SET status = "SYNCED", error_message = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [item.id]);

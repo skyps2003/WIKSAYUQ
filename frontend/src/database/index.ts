@@ -16,6 +16,12 @@ export const initDB = () => {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS offline_cache (
+      cache_key TEXT PRIMARY KEY,
+      data TEXT NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS conversaciones (
       id TEXT PRIMARY KEY,
       gestante_id TEXT,
@@ -48,4 +54,20 @@ export const initDB = () => {
   try {
     db.execSync('ALTER TABLE sync_queue ADD COLUMN updated_at DATETIME;');
   } catch {}
+};
+
+export const saveCachedData = (cacheKey: string, data: unknown) => {
+  db.runSync(
+    'INSERT OR REPLACE INTO offline_cache (cache_key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)',
+    [cacheKey, JSON.stringify(data)]
+  );
+};
+
+export const getCachedData = <T>(cacheKey: string, fallback: T): T => {
+  try {
+    const row = db.getFirstSync<{ data: string }>('SELECT data FROM offline_cache WHERE cache_key = ?', [cacheKey]);
+    return row ? JSON.parse(row.data) as T : fallback;
+  } catch {
+    return fallback;
+  }
 };
