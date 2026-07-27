@@ -2,7 +2,7 @@ import { getDB } from '../../database';
 import NetInfo from '@react-native-community/netinfo';
 import API_URL from '../../config/api';
 import { OfflineDataService } from '../offline-data.service';
-import { getItemAsync, setItemAsync } from '../utils/webStorage';
+import { getItemAsync, setItemAsync } from '../../utils/webStorage';
 
 type QueueTable = 'controles' | 'citas' | 'vacunas' | 'contactos';
 
