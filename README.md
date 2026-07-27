@@ -1,59 +1,104 @@
 # WIKSAYUQ
 > Tu embarazo, nuestro acompañamiento.
 
-Proyecto de aplicación móvil para el seguimiento prenatal de gestantes en zonas altoandinas del Perú.
+Aplicación móvil para el seguimiento prenatal de gestantes en zonas altoandinas del Perú.
 
-## Arquitectura del Proyecto
+## Arquitectura
 
-El proyecto está dividido en dos partes principales:
-- **Backend y Base de Datos:** Alojados en la nube. La API RESTful (Node.js, Express, TypeScript, Prisma) y la base de datos PostgreSQL ya están desplegados y funcionando remotamente.
-- **Frontend (Mobile App):** Aplicación móvil construida con React Native y Expo, que se conecta a la API en la nube y soporta funcionalidad offline-first mediante SQLite.
+```
+┌─────────────────────┐       ┌──────────────────────┐       ┌──────────────┐
+│  App Móvil (Expo)   │ ──►   │  Backend Express     │ ──►   │  Supabase    │
+│  (tu celular /      │ HTTP  │  (tu PC local)       │ SQL   │  (cloud DB)  │
+│   emulador)         │       │  localhost:3000       │       │  PostgreSQL  │
+└─────────────────────┘       └──────────────────────┘       └──────────────┘
+```
+
+- **Backend** → se ejecuta **localmente** en tu PC con Node.js
+- **Base de datos** → **Supabase cloud** (PostgreSQL remoto)
+- **App** → Expo (React Native), se conecta al backend de tu PC vía WiFi
 
 ## Requisitos Previos
+
 - Node.js v18+
-- Aplicación [Expo Go](https://expo.dev/client) instalada en tu dispositivo físico (Android/iOS) o un emulador correctamente configurado.
+- Expo Go en tu celular, o un emulador Android/iOS
+- Tu PC y tu celular conectados a la **misma red WiFi**
 
-## Instrucciones de Instalación y Ejecución
+## Instalación y Ejecución
 
-Dado que el **backend y la base de datos se encuentran en la nube**, solo necesitas instalar y ejecutar el entorno frontend para probar la aplicación.
+### 1. Backend (en tu PC)
 
-### 1. Configuración del Frontend
-
-Abre una terminal y navega a la carpeta del frontend:
 ```bash
-cd frontend
-```
-
-Instala las dependencias del proyecto:
-```bash
+cd backend
 npm install
-```
-
-Crea tu archivo de variables de entorno:
-```bash
 cp .env.example .env
 ```
-*(Nota: Si usas Windows, puedes simplemente copiar y pegar el archivo `.env.example` y renombrarlo a `.env`)*
 
-Abre el archivo `.env` recién creado y asegúrate de que la variable `EXPO_PUBLIC_API_URL` esté apuntando a la URL del backend en la nube.
-Ejemplo:
-```env
-EXPO_PUBLIC_API_URL=https://api.tu-dominio-en-la-nube.com/api
+Edita `backend/.env` y completa los datos reales de tu base de datos Supabase (o usa los que ya tienes).
+
+Luego inicia el servidor:
+
+```bash
+npm run dev
 ```
 
-### 2. Ejecutar la Aplicación
+Deberías ver: `[server]: Server is running at http://0.0.0.0:3000`
 
-Inicia el servidor de desarrollo de Expo:
+### 2. Frontend (en tu PC)
+
+```bash
+cd frontend
+npm install
+cp .env.example .env
+```
+
+### 3. Dónde cambiar la IP del Backend
+
+Abre `frontend/.env` y edita `EXPO_PUBLIC_API_URL` con la IP **local de tu PC**:
+
+```env
+EXPO_PUBLIC_API_URL=http://192.168.18.50:3000/api
+```
+
+**¿Cómo saber tu IP local?**
+- **Windows:** Abre PowerShell y ejecuta `ipconfig`. Busca la dirección IPv4 (ej: `192.168.x.x`).
+- **macOS/Linux:** Ejecuta `ifconfig` o `ip a`.
+
+Reemplaza `192.168.18.50` por la IP que obtuviste.
+
+> **Importante:** Si usas un emulador Android, puedes usar `http://10.0.2.2:3000/api` (el emulador mapea `10.0.2.2` a tu `localhost`).  
+> Para iOS simulator, usa `http://localhost:3000/api`.
+
+### 4. Ejecutar la App
+
 ```bash
 npx expo start
 ```
 
-Una vez que se inicie el servidor, verás un código QR en tu terminal:
-- **Dispositivo físico:** Escanea el código QR usando la app Expo Go (en Android) o la aplicación de Cámara (en iOS).
-- **Emuladores:** Presiona `a` en la terminal para abrir el Android Emulator o `i` para abrir el iOS Simulator.
+Escanea el QR con Expo Go (Android) o la cámara (iOS).
+
+## Build APK (EAS)
+
+```bash
+cd frontend
+npx eas build --profile preview --platform android
+```
+
+El APK generado apuntará a la IP configurada en `frontend/eas.json`.  
+**Importante:** Para que funcione en otro dispositivo, ambos deben estar en la misma red WiFi y el backend debe estar corriendo.
+
+## Archivos Clave
+
+| Archivo | Qué hace |
+|---|---|
+| `frontend/.env` | IP del backend para desarrollo local |
+| `frontend/eas.json` | IP del backend para builds EAS (APK) |
+| `frontend/src/config/api.ts` | Lógica de selección de URL |
+| `backend/.env` | Conexión a Supabase y JWT secrets |
+| `backend/.env.example` | Template para configurar el backend |
 
 ## Solución de Problemas
 
-- **La app no conecta al backend o no carga datos:** Verifica que tu dispositivo móvil tenga conexión a internet y que la URL definida en `EXPO_PUBLIC_API_URL` sea correcta.
-- **Problemas al instalar dependencias:** Asegúrate de estar usando una versión reciente de Node.js (v18 o superior). Puedes borrar la carpeta `node_modules` y ejecutar `npm install` nuevamente.
-- **Los cambios en el `.env` no se reflejan:** Si cambiaste la URL del backend, reinicia el servidor de Expo limpiando la caché ejecutando: `npx expo start -c`.
+- **"Network request failed":** Verifica que el backend esté corriendo (`npm run dev` en `backend/`) y que la IP en `frontend/.env` sea correcta.
+- **El celular no encuentra el servidor:** Asegúrate de estar en la misma red WiFi. Prueba hacer ping a la IP de tu PC desde el celular.
+- **CORS error:** Revisa que `CORS_ORIGINS` en `backend/.env` incluya la IP de tu celular.
+- **Puerto bloqueado:** Asegúrate de que el puerto 3000 no esté siendo usado por otro programa.
