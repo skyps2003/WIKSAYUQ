@@ -1,14 +1,17 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import { getItemAsync, setItemAsync } from '../utils/webStorage';
 
 import es from './es';
 import qu from './qu';
 
 const STORE_LANGUAGE_KEY = 'wiksayuq.language';
 
-// A simple language detector that reads from SecureStore (only on Native)
+const getLocalStorage = () => {
+  try { return typeof localStorage !== 'undefined' ? localStorage : null; } catch { return null; }
+};
+
 const languageDetector = {
   type: 'languageDetector' as const,
   async: true,
@@ -16,15 +19,15 @@ const languageDetector = {
     try {
       let savedLanguage = null;
       if (Platform.OS !== 'web') {
-        savedLanguage = await SecureStore.getItemAsync(STORE_LANGUAGE_KEY);
+        savedLanguage = await getItemAsync(STORE_LANGUAGE_KEY);
       } else {
-        savedLanguage = localStorage.getItem(STORE_LANGUAGE_KEY);
+        const ls = getLocalStorage();
+        savedLanguage = ls ? ls.getItem(STORE_LANGUAGE_KEY) : null;
       }
       
       if (savedLanguage) {
         callback(savedLanguage);
       } else {
-        // Fallback language
         callback('es');
       }
     } catch (error) {
@@ -36,9 +39,10 @@ const languageDetector = {
   cacheUserLanguage: async (lng: string) => {
     try {
       if (Platform.OS !== 'web') {
-        await SecureStore.setItemAsync(STORE_LANGUAGE_KEY, lng);
+        await setItemAsync(STORE_LANGUAGE_KEY, lng);
       } else {
-        localStorage.setItem(STORE_LANGUAGE_KEY, lng);
+        const ls = getLocalStorage();
+        if (ls) ls.setItem(STORE_LANGUAGE_KEY, lng);
       }
     } catch (error) {
       console.log('Error saving language', error);

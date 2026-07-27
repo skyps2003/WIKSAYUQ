@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../../src/utils/webStorage';
 
 import { AppText } from '../../src/components/AppText';
 import { Card } from '../../src/components/Card';
@@ -36,10 +36,10 @@ export default function HistorialScreen() {
 
   const fetchData = async () => {
     try {
-      const token = await SecureStore.getItemAsync('userToken');
-      const storedCentroSalud = await SecureStore.getItemAsync('userCentroSalud');
-      const storedCentroSaludId = await SecureStore.getItemAsync('userCentroSaludId');
-      const storedFum = await SecureStore.getItemAsync('userFum');
+      const token = await getItemAsync('userToken');
+      const storedCentroSalud = await getItemAsync('userCentroSalud');
+      const storedCentroSaludId = await getItemAsync('userCentroSaludId');
+      const storedFum = await getItemAsync('userFum');
       setUserCentroSalud(storedCentroSalud || '');
       setUserCentroSaludId(storedCentroSaludId || '');
       setUserFum(storedFum || '');

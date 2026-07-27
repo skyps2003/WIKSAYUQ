@@ -1,8 +1,8 @@
 import { getDB } from '../../database';
 import NetInfo from '@react-native-community/netinfo';
-import * as SecureStore from 'expo-secure-store';
 import API_URL from '../../config/api';
 import { OfflineDataService } from '../offline-data.service';
+import { getItemAsync, setItemAsync } from '../utils/webStorage';
 
 type QueueTable = 'controles' | 'citas' | 'vacunas' | 'contactos';
 
@@ -115,7 +115,7 @@ export class SyncService {
   }
 
   private static async post(tableName: QueueTable, data: Record<string, any>) {
-    const token = await SecureStore.getItemAsync('userToken');
+    const token = await getItemAsync('userToken');
     return fetch(`${API_URL}${ENDPOINTS[tableName]}`, {
       method: 'POST',
       headers: {

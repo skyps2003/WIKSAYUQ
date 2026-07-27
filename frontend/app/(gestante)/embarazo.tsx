@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../../src/utils/webStorage';
 import { AppText } from '../../src/components/AppText';
 import { colors } from '../../src/theme/colors';
 import { spacing } from '../../src/theme/spacing';
@@ -44,7 +44,7 @@ export default function EmbarazoScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const wk = await SecureStore.getItemAsync('userWeeks');
+        const wk = await getItemAsync('userWeeks');
         if (wk) setWeeks(parseInt(wk, 10));
       } catch {}
     })();

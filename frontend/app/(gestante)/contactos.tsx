@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../../src/utils/webStorage';
 import { AppText } from '../../src/components/AppText';
 import { AppButton } from '../../src/components/AppButton';
 import { Card } from '../../src/components/Card';
@@ -39,7 +39,7 @@ export default function ContactosScreen() {
 
   const fetchContactos = async () => {
     try {
-      const token = await SecureStore.getItemAsync('userToken');
+      const token = await getItemAsync('userToken');
       const response = await fetchWithTimeout(`${API_URL}/contactos`, {
         timeout: 12000,
         headers: { 'Authorization': `Bearer ${token}` }
@@ -118,7 +118,7 @@ export default function ContactosScreen() {
 
   const handleSetPrincipal = async (id: string) => {
     try {
-      const token = await SecureStore.getItemAsync('userToken');
+      const token = await getItemAsync('userToken');
       const response = await fetch(`${API_URL}/contactos/${id}/principal`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -137,7 +137,7 @@ export default function ContactosScreen() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     try {
-      const token = await SecureStore.getItemAsync('userToken');
+      const token = await getItemAsync('userToken');
       const response = await fetch(`${API_URL}/contactos/${deleteTarget}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }

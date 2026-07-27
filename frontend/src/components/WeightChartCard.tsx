@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { LayoutChangeEvent, View, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
 import { useTranslation } from 'react-i18next';
 import { Card } from './Card';
 import { AppText } from './AppText';
+import { getItemAsync, setItemAsync } from '../utils/webStorage';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import API_URL from '../config/api';
@@ -40,7 +40,7 @@ export const WeightChartCard: React.FC<{ refreshKey?: number }> = ({ refreshKey 
   useEffect(() => {
     const fetchPeso = async () => {
       try {
-        const token = await SecureStore.getItemAsync('userToken');
+        const token = await getItemAsync('userToken');
         const res = await fetch(`${API_URL}/controles`, {
           headers: { Authorization: `Bearer ${token}` },
         });

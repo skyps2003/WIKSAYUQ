@@ -9,7 +9,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { DatePickerModal } from '../../src/components/DatePickerModal';
 import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync } from '../../src/utils/webStorage';
 import API_URL from '../../src/config/api';
 import { clearUserSessionData } from '../../src/utils/userSession';
 import { useKeyboardHeight } from '../../src/hooks/useKeyboardHeight';
@@ -253,34 +253,34 @@ export default function RegistroScreen() {
       const user = result.data.user;
 
       await clearUserSessionData();
-      await SecureStore.setItemAsync('userToken', result.data.token);
-      await SecureStore.setItemAsync('userName', primerNombre);
-      await SecureStore.setItemAsync('userFullName', user.nombres || nombres);
-      await SecureStore.setItemAsync('userDni', user.dni || dni);
-      await SecureStore.setItemAsync('userAge', edad || '0');
-      await SecureStore.setItemAsync('userApellidoPaterno', user.apellido_paterno || apellidoPaterno || '');
-      await SecureStore.setItemAsync('userApellidoMaterno', user.apellido_materno || apellidoMaterno || '');
-      await SecureStore.setItemAsync('userSexo', user.sexo || 'NO_ESPECIFICA');
-      await SecureStore.setItemAsync('userTelefono', user.telefono || '');
-      await SecureStore.setItemAsync('userDireccion', user.direccion || '');
-      await SecureStore.setItemAsync('userIdioma', user.idioma_preferido || 'ESPANOL');
-      if (user.foto_base64) await SecureStore.setItemAsync('userPhoto', user.foto_base64);
-      else if (fotoBase64) await SecureStore.setItemAsync('userPhoto', fotoBase64);
+      await setItemAsync('userToken', result.data.token);
+      await setItemAsync('userName', primerNombre);
+      await setItemAsync('userFullName', user.nombres || nombres);
+      await setItemAsync('userDni', user.dni || dni);
+      await setItemAsync('userAge', edad || '0');
+      await setItemAsync('userApellidoPaterno', user.apellido_paterno || apellidoPaterno || '');
+      await setItemAsync('userApellidoMaterno', user.apellido_materno || apellidoMaterno || '');
+      await setItemAsync('userSexo', user.sexo || 'NO_ESPECIFICA');
+      await setItemAsync('userTelefono', user.telefono || '');
+      await setItemAsync('userDireccion', user.direccion || '');
+      await setItemAsync('userIdioma', user.idioma_preferido || 'ESPANOL');
+      if (user.foto_base64) await setItemAsync('userPhoto', user.foto_base64);
+      else if (fotoBase64) await setItemAsync('userPhoto', fotoBase64);
       const comunidadFinal = comunidad.trim();
       if (comunidadFinal) {
-        await SecureStore.setItemAsync('userComunidadId', 'custom');
-        await SecureStore.setItemAsync('userComunidad', comunidadFinal);
+        await setItemAsync('userComunidadId', 'custom');
+        await setItemAsync('userComunidad', comunidadFinal);
       }
       if (centroSaludFinal) {
-        await SecureStore.setItemAsync('userCentroSaludId', centroSaludFinal.id);
-        await SecureStore.setItemAsync('userCentroSalud', centroSaludFinal.nombre);
+        await setItemAsync('userCentroSaludId', centroSaludFinal.id);
+        await setItemAsync('userCentroSalud', centroSaludFinal.nombre);
         await OfflineDataService.savePreferredHealthCenter(centroSaludFinal, user.dni || dni);
       }
-      await SecureStore.setItemAsync('userWeeks', semanas.toString());
-      await SecureStore.setItemAsync('userTrimester', trimestre);
-      if (dateSelected) await SecureStore.setItemAsync('userFum', fum.toISOString());
-      await SecureStore.setItemAsync('isLoggedIn', 'true');
-      await SecureStore.setItemAsync('userRole', 'gestante');
+      await setItemAsync('userWeeks', semanas.toString());
+      await setItemAsync('userTrimester', trimestre);
+      if (dateSelected) await setItemAsync('userFum', fum.toISOString());
+      await setItemAsync('isLoggedIn', 'true');
+      await setItemAsync('userRole', 'gestante');
       router.replace('/(gestante)/(tabs)/inicio' as any);
     } catch (e) {
       console.error(e);

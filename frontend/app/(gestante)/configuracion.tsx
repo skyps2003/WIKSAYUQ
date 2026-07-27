@@ -9,7 +9,7 @@ import { spacing } from '../../src/theme/spacing';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAccessibilityStore, FontSizeLevel } from '../../src/store/accessibility-store';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../../src/utils/webStorage';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 
@@ -27,13 +27,13 @@ export default function ConfiguracionScreen() {
 
   const handleFontSizeChange = async (size: FontSizeLevel) => {
     setFontSize(size);
-    await SecureStore.setItemAsync('wiksayuq.fontSize', size);
+    await setItemAsync('wiksayuq.fontSize', size);
   };
 
   const toggleLanguage = async () => {
     const newLang = i18n.language === 'es' ? 'qu' : 'es';
     await i18n.changeLanguage(newLang);
-    await SecureStore.setItemAsync('wiksayuq.language', newLang);
+    await setItemAsync('wiksayuq.language', newLang);
   };
 
   const lang = i18n.language === 'qu' ? 'qu' : 'es';

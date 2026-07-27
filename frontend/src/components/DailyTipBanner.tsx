@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync } from '../utils/webStorage';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText } from './AppText';
 import { Card } from './Card';
@@ -21,7 +21,7 @@ export const DailyTipBanner: React.FC = () => {
   useEffect(() => {
     const checkDismissed = async () => {
       const today = Math.floor(Date.now() / 86400000).toString();
-      const saved = await SecureStore.getItemAsync(DISMISS_KEY);
+      const saved = await getItemAsync(DISMISS_KEY);
       if (saved === today) setVisible(false);
     };
     checkDismissed();
@@ -29,7 +29,7 @@ export const DailyTipBanner: React.FC = () => {
 
   const dismiss = async () => {
     const today = Math.floor(Date.now() / 86400000).toString();
-    await SecureStore.setItemAsync(DISMISS_KEY, today);
+    await setItemAsync(DISMISS_KEY, today);
     setVisible(false);
   };
 

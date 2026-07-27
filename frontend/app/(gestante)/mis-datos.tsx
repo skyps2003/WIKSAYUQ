@@ -10,7 +10,7 @@ import { colors } from '../../src/theme/colors';
 import { spacing, radius } from '../../src/theme/spacing';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../../src/utils/webStorage';
 import { useTranslation } from 'react-i18next';
 import API_URL from '../../src/config/api';
 
@@ -41,12 +41,12 @@ export default function MisDatosScreen() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const fullName = await SecureStore.getItemAsync('userFullName') || 'María Quispe';
-        const dni = await SecureStore.getItemAsync('userDni') || '-';
-        const age = await SecureStore.getItemAsync('userAge') || '-';
-        const centroSalud = await SecureStore.getItemAsync('userCentroSalud') || '-';
-        const weeks = await SecureStore.getItemAsync('userWeeks') || '0';
-        const photo = await SecureStore.getItemAsync('userPhoto') || null;
+        const fullName = await getItemAsync('userFullName') || 'María Quispe';
+        const dni = await getItemAsync('userDni') || '-';
+        const age = await getItemAsync('userAge') || '-';
+        const centroSalud = await getItemAsync('userCentroSalud') || '-';
+        const weeks = await getItemAsync('userWeeks') || '0';
+        const photo = await getItemAsync('userPhoto') || null;
         setUserData({ fullName, dni, age, centroSalud, weeks, photo });
       } catch (error) {
         console.error('Error loading data', error);
@@ -82,7 +82,7 @@ export default function MisDatosScreen() {
 
     setLoading(true);
     try {
-      const token = await SecureStore.getItemAsync('userToken');
+      const token = await getItemAsync('userToken');
       const response = await fetch(`${API_URL}/auth/change-pin`, {
         method: 'POST',
         headers: {

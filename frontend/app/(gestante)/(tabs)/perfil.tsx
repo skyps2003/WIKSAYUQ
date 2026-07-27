@@ -11,7 +11,7 @@ import { MenuItem } from '../../../src/components/MenuItem';
 import { colors } from '../../../src/theme/colors';
 import { spacing, radius } from '../../../src/theme/spacing';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../../../src/utils/webStorage';
 import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from 'expo-router';
@@ -35,15 +35,15 @@ export default function PerfilScreen() {
     useCallback(() => {
       const loadData = async () => {
         try {
-          const fullName = await SecureStore.getItemAsync('userFullName') || 'María Quispe Huamán';
-          const photo = await SecureStore.getItemAsync('userPhoto');
-          const fum = await SecureStore.getItemAsync('userFum');
+          const fullName = await getItemAsync('userFullName') || 'María Quispe Huamán';
+          const photo = await getItemAsync('userPhoto');
+          const fum = await getItemAsync('userFum');
           const calculatedWeeks = calculateGestationalWeeks(fum);
           const weeks = calculatedWeeks !== null
             ? calculatedWeeks.toString()
-            : await SecureStore.getItemAsync('userWeeks') || '0';
-          const centroSalud = await SecureStore.getItemAsync('userCentroSalud') || 'Hospital Regional';
-          if (calculatedWeeks !== null) await SecureStore.setItemAsync('userWeeks', weeks);
+            : await getItemAsync('userWeeks') || '0';
+          const centroSalud = await getItemAsync('userCentroSalud') || 'Hospital Regional';
+          if (calculatedWeeks !== null) await setItemAsync('userWeeks', weeks);
           setUserData({ fullName, photo, weeks, centroSalud });
           setRefreshKey(prev => prev + 1);
         } catch (error) {
@@ -66,7 +66,7 @@ export default function PerfilScreen() {
       if (!result.canceled && result.assets[0].base64) {
         const base64Img = `data:image/jpeg;base64,${result.assets[0].base64}`;
         setUserData(prev => ({ ...prev, photo: base64Img }));
-        await SecureStore.setItemAsync('userPhoto', base64Img);
+        await setItemAsync('userPhoto', base64Img);
       }
     } catch (error) {
       console.error('Error selecting image:', error);
@@ -77,7 +77,7 @@ export default function PerfilScreen() {
 
   const confirmLogout = async () => {
     try {
-      await SecureStore.deleteItemAsync('isLoggedIn');
+      await deleteItemAsync('isLoggedIn');
       router.replace('/(public)/login' as any);
     } catch (e) {
       console.error('Error cerrando sesión', e);

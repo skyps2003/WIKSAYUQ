@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../../../src/utils/webStorage';
 
 import { AppText } from '../../../src/components/AppText';
 import { ScreenHeader } from '../../../src/components/ScreenHeader';
@@ -55,7 +55,7 @@ export default function CalendarioScreen() {
 
   const fetchAllData = async () => {
     try {
-      const token = await SecureStore.getItemAsync('userToken');
+      const token = await getItemAsync('userToken');
       const headers = { 'Authorization': `Bearer ${token}` };
 
       const [resCitas, resVacunas] = await Promise.all([

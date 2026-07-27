@@ -1,24 +1,35 @@
+import { Platform } from 'react-native';
 import * as SQLite from 'expo-sqlite';
 
 let _db: SQLite.SQLiteDatabase | null = null;
+const isWeb = Platform.OS === 'web';
 
-export const getDB = (): SQLite.SQLiteDatabase => {
+const inMemoryCache = new Map<string, string>();
+
+export const getDB = (): SQLite.SQLiteDatabase | null => {
+  if (isWeb) return null;
   if (!_db) {
-    _db = SQLite.openDatabaseSync('wiksayuq.db');
+    try {
+      _db = SQLite.openDatabaseSync('wiksayuq.db');
+    } catch (e) {
+      console.warn('SQLite not available:', e);
+      return null;
+    }
   }
   return _db;
 };
 
 export const initDB = () => {
   const db = getDB();
+  if (!db) return;
   db.execSync(`
     PRAGMA journal_mode = WAL;
     
     CREATE TABLE IF NOT EXISTS sync_queue (
       id TEXT PRIMARY KEY,
       table_name TEXT NOT NULL,
-      operation TEXT NOT NULL, -- CREATE, UPDATE, DELETE
-      data TEXT NOT NULL,      -- JSON de los datos
+      operation TEXT NOT NULL,
+      data TEXT NOT NULL,
       status TEXT DEFAULT 'PENDING',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -50,8 +61,6 @@ export const initDB = () => {
       updated_at DATETIME,
       sync_status TEXT DEFAULT 'SYNCED'
     );
-
-    -- Aquí se añadirían el resto de tablas locales...
   `);
 
   try {
@@ -64,7 +73,12 @@ export const initDB = () => {
 };
 
 export const saveCachedData = (cacheKey: string, data: unknown) => {
+  if (isWeb) {
+    inMemoryCache.set(cacheKey, JSON.stringify(data));
+    return;
+  }
   const db = getDB();
+  if (!db) return;
   db.runSync(
     'INSERT OR REPLACE INTO offline_cache (cache_key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)',
     [cacheKey, JSON.stringify(data)]
@@ -72,8 +86,13 @@ export const saveCachedData = (cacheKey: string, data: unknown) => {
 };
 
 export const getCachedData = <T>(cacheKey: string, fallback: T): T => {
+  if (isWeb) {
+    const cached = inMemoryCache.get(cacheKey);
+    return cached ? JSON.parse(cached) as T : fallback;
+  }
   try {
     const db = getDB();
+    if (!db) return fallback;
     const row = db.getFirstSync<{ data: string }>('SELECT data FROM offline_cache WHERE cache_key = ?', [cacheKey]);
     return row ? JSON.parse(row.data) as T : fallback;
   } catch {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Redirect, useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { View, ActivityIndicator } from 'react-native';
+import { getItemAsync } from '../src/utils/webStorage';
 import theme from '../src/theme';
 
 export default function Index() {
@@ -11,9 +11,9 @@ export default function Index() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const authStatus = await SecureStore.getItemAsync('isLoggedIn');
-        const userRole = await SecureStore.getItemAsync('userRole');
-        const savedLanguage = await SecureStore.getItemAsync('wiksayuq.language');
+        const authStatus = await getItemAsync('isLoggedIn');
+        const userRole = await getItemAsync('userRole');
+        const savedLanguage = await getItemAsync('wiksayuq.language');
 
         if (authStatus === 'true') {
           if (userRole === 'personal_salud') {

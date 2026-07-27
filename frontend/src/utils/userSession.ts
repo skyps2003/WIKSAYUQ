@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import { deleteItemAsync } from './webStorage';
 
 const USER_SESSION_KEYS = [
   'userToken',
@@ -26,6 +26,6 @@ const USER_SESSION_KEYS = [
 
 export async function clearUserSessionData() {
   await Promise.all(
-    USER_SESSION_KEYS.map((key) => SecureStore.deleteItemAsync(key).catch(() => undefined))
+    USER_SESSION_KEYS.map((key) => deleteItemAsync(key).catch(() => undefined))
   );
 }

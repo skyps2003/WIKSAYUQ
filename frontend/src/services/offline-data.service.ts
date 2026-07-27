@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync } from '../utils/webStorage';
 import { getCachedData, saveCachedData } from '../database';
 
 export type PreferredHealthCenter = {
@@ -10,7 +10,7 @@ const CONTACTS_CACHE_PREFIX = 'contactos:';
 const ESTABLISHMENTS_CACHE_KEY = 'establecimientos';
 const preferredCenterKey = (dni: string) => `centro-salud-${dni}`;
 
-const getUserScope = async () => (await SecureStore.getItemAsync('userDni')) || 'anonimo';
+const getUserScope = async () => (await getItemAsync('userDni')) || 'anonimo';
 
 export class OfflineDataService {
   static async cacheContacts(contactos: any[]) {
@@ -36,12 +36,12 @@ export class OfflineDataService {
 
   static async savePreferredHealthCenter(center: PreferredHealthCenter, dni?: string) {
     const scope = dni || await getUserScope();
-    await SecureStore.setItemAsync(preferredCenterKey(scope), JSON.stringify(center));
+    await setItemAsync(preferredCenterKey(scope), JSON.stringify(center));
   }
 
   static async getPreferredHealthCenter(dni?: string): Promise<PreferredHealthCenter | null> {
     const scope = dni || await getUserScope();
-    const value = await SecureStore.getItemAsync(preferredCenterKey(scope));
+    const value = await getItemAsync(preferredCenterKey(scope));
 
     if (value) {
       try {
@@ -52,9 +52,9 @@ export class OfflineDataService {
     }
 
     // Migrate the center kept by older APK versions for the same signed-in user.
-    const sessionDni = await SecureStore.getItemAsync('userDni');
-    const id = await SecureStore.getItemAsync('userCentroSaludId');
-    const nombre = await SecureStore.getItemAsync('userCentroSalud');
+    const sessionDni = await getItemAsync('userDni');
+    const id = await getItemAsync('userCentroSaludId');
+    const nombre = await getItemAsync('userCentroSalud');
     if (sessionDni === scope && id && nombre) {
       const center = { id, nombre };
       await this.savePreferredHealthCenter(center, scope);

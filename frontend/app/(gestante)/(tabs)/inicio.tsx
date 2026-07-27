@@ -8,7 +8,7 @@ import { radius, spacing } from '../../../src/theme/spacing';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../../../src/utils/webStorage';
 import API_URL from '../../../src/config/api';
 import { DailyTipBanner } from '../../../src/components/DailyTipBanner';
 import { calculateGestationalWeeks, getTrimesterKey } from '../../../src/utils/gestation';
@@ -38,9 +38,9 @@ export default function InicioGestanteScreen() {
     useCallback(() => {
       const loadUserData = async () => {
         try {
-          const name = await SecureStore.getItemAsync('userName');
-          const wk = await SecureStore.getItemAsync('userWeeks');
-          const fum = await SecureStore.getItemAsync('userFum');
+          const name = await getItemAsync('userName');
+          const wk = await getItemAsync('userWeeks');
+          const fum = await getItemAsync('userFum');
           const calculatedWeeks = calculateGestationalWeeks(fum);
           
           if (name) setUserName(name);
@@ -48,7 +48,7 @@ export default function InicioGestanteScreen() {
             const nextWeeks = calculatedWeeks.toString();
             setWeeks(nextWeeks);
             setTrimesterKey(getTrimesterKey(calculatedWeeks));
-            await SecureStore.setItemAsync('userWeeks', nextWeeks);
+            await setItemAsync('userWeeks', nextWeeks);
           } else if (wk) {
             const parsedWeeks = parseInt(wk, 10);
             setWeeks(wk);
@@ -65,9 +65,9 @@ export default function InicioGestanteScreen() {
 
   const fetchNextCita = async () => {
     try {
-      const token = await SecureStore.getItemAsync('userToken');
-      const centroSaludId = await SecureStore.getItemAsync('userCentroSaludId');
-      const centroSaludNombre = await SecureStore.getItemAsync('userCentroSalud');
+      const token = await getItemAsync('userToken');
+      const centroSaludId = await getItemAsync('userCentroSaludId');
+      const centroSaludNombre = await getItemAsync('userCentroSalud');
       const res = await fetch(`${API_URL}/citas/proximas`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });

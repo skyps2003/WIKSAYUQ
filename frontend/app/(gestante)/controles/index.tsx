@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, TextInput, Switch, Plat
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../../../src/utils/webStorage';
 import * as Location from 'expo-location';
 import { Picker } from '@react-native-picker/picker';
 import { AppText } from '../../../src/components/AppText';
@@ -119,8 +119,8 @@ export default function ControlesRegistroScreen() {
   }, []);
 
   const loadUserData = async () => {
-    const centroId = await SecureStore.getItemAsync('userCentroSaludId');
-    const centroName = await SecureStore.getItemAsync('userCentroSalud');
+    const centroId = await getItemAsync('userCentroSaludId');
+    const centroName = await getItemAsync('userCentroSalud');
     if (centroId) {
       setUserCentroSaludId(centroId);
       setUserCentroSaludName(centroName || '');
@@ -163,7 +163,7 @@ export default function ControlesRegistroScreen() {
     let list = OfflineDataService.getCachedEstablishments();
 
     try {
-      const token = await SecureStore.getItemAsync('userToken');
+      const token = await getItemAsync('userToken');
       const resEst = await fetchWithTimeout(`${API_URL}/establecimientos`, {
         headers: { 'Authorization': `Bearer ${token}` },
         timeout: 12000,
@@ -179,8 +179,8 @@ export default function ControlesRegistroScreen() {
       console.error('Using cached health centers:', e);
     }
 
-    const centroId = await SecureStore.getItemAsync('userCentroSaludId');
-    const centroName = await SecureStore.getItemAsync('userCentroSalud');
+    const centroId = await getItemAsync('userCentroSaludId');
+    const centroName = await getItemAsync('userCentroSalud');
     if (centroId === 'custom' && centroName && !list.some((e: any) => e.id === 'custom')) {
       list = [{ id: 'custom', nombre: centroName }, ...list];
     }
@@ -194,7 +194,7 @@ export default function ControlesRegistroScreen() {
     }
     setLoading(true);
     try {
-      const fum = await SecureStore.getItemAsync('userFum');
+      const fum = await getItemAsync('userFum');
       const data = await SyncService.saveOrQueue({
         tableName: 'controles',
         data: { fecha_control: dateControl.toISOString(), establecimiento_id: estControl === 'custom' ? null : estControl, peso_kg: peso, presion_sistolica: paSis, presion_diastolica: paDia, fum }
@@ -218,7 +218,7 @@ export default function ControlesRegistroScreen() {
     }
     setLoading(true);
     try {
-      const fum = await SecureStore.getItemAsync('userFum');
+      const fum = await getItemAsync('userFum');
       const combinedDate = new Date(dateCita);
       combinedDate.setHours(timeCita.getHours());
       combinedDate.setMinutes(timeCita.getMinutes());
@@ -245,7 +245,7 @@ export default function ControlesRegistroScreen() {
     }
     setLoading(true);
     try {
-      const fum = await SecureStore.getItemAsync('userFum');
+      const fum = await getItemAsync('userFum');
       const body: any = { nombre_vacuna: nombreVacuna, descripcion_vacuna: descripcionVacuna || null, establecimiento_id: estVacuna === 'custom' ? null : estVacuna, estado: vacunaEstado, fum };
       if (vacunaEstado === 'APLICADA') {
         body.fecha_aplicacion = dateVacuna.toISOString();

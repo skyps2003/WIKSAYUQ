@@ -5,7 +5,7 @@ import { AppText } from '../../src/components/AppText';
 import { AppConfirmDialog } from '../../src/components/AppConfirmDialog';
 import theme from '../../src/theme';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync } from '../../src/utils/webStorage';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import NetInfo from '@react-native-community/netinfo';
@@ -45,7 +45,7 @@ export default function LoginScreen() {
 
   useEffect(() => {
     const loadLanguagePreference = async () => {
-      const savedLanguage = await SecureStore.getItemAsync('wiksayuq.language');
+      const savedLanguage = await getItemAsync('wiksayuq.language');
       setShowLanguageSelection(!savedLanguage);
     };
 
@@ -85,25 +85,25 @@ export default function LoginScreen() {
 
       if (result.success) {
         await clearUserSessionData();
-        await SecureStore.setItemAsync('userToken', result.data.token);
-        await SecureStore.setItemAsync('isLoggedIn', 'true');
+        await setItemAsync('userToken', result.data.token);
+        await setItemAsync('isLoggedIn', 'true');
         
         const user = result.data.user;
-        await SecureStore.setItemAsync('userName', user.nombres.split(' ')[0]);
-        await SecureStore.setItemAsync('userFullName', user.nombres);
-        await SecureStore.setItemAsync('userDni', user.dni);
-        await SecureStore.setItemAsync('userRole', user.rol.toLowerCase());
+        await setItemAsync('userName', user.nombres.split(' ')[0]);
+        await setItemAsync('userFullName', user.nombres);
+        await setItemAsync('userDni', user.dni);
+        await setItemAsync('userRole', user.rol.toLowerCase());
         
         if (user.foto_base64) {
-          await SecureStore.setItemAsync('userPhoto', user.foto_base64);
+          await setItemAsync('userPhoto', user.foto_base64);
         }
 
         if (user.fum) {
-          await SecureStore.setItemAsync('userFum', user.fum);
+          await setItemAsync('userFum', user.fum);
           const weeks = calculateGestationalWeeks(user.fum);
           if (weeks !== null) {
-            await SecureStore.setItemAsync('userWeeks', weeks.toString());
-            await SecureStore.setItemAsync('userTrimester', getTrimesterKey(weeks));
+            await setItemAsync('userWeeks', weeks.toString());
+            await setItemAsync('userTrimester', getTrimesterKey(weeks));
           }
         }
 
@@ -111,8 +111,8 @@ export default function LoginScreen() {
           ? { id: user.establecimiento_id, nombre: user.centro_salud }
           : await OfflineDataService.getPreferredHealthCenter(user.dni);
         if (preferredCenter) {
-          await SecureStore.setItemAsync('userCentroSaludId', preferredCenter.id);
-          await SecureStore.setItemAsync('userCentroSalud', preferredCenter.nombre);
+          await setItemAsync('userCentroSaludId', preferredCenter.id);
+          await setItemAsync('userCentroSalud', preferredCenter.nombre);
           await OfflineDataService.savePreferredHealthCenter(preferredCenter, user.dni);
         }
         
@@ -139,7 +139,7 @@ export default function LoginScreen() {
 
   const selectLanguage = async (lang: string) => {
     await i18n.changeLanguage(lang);
-    await SecureStore.setItemAsync('wiksayuq.language', lang);
+    await setItemAsync('wiksayuq.language', lang);
     setShowLanguageSelection(false);
   };
 

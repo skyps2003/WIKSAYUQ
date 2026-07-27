@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import * as Location from 'expo-location';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../../../src/utils/webStorage';
 import NetInfo from '@react-native-community/netinfo';
 import { WebView } from 'react-native-webview';
 import { AppText } from '../../../src/components/AppText';
@@ -122,7 +122,7 @@ export default function EstablecimientosScreen() {
 
       let centers = OfflineDataService.getCachedEstablishments();
       try {
-        const token = await SecureStore.getItemAsync('userToken');
+        const token = await getItemAsync('userToken');
         const response = await fetchWithTimeout(`${API_URL}/establecimientos`, {
           timeout: 12000,
           headers: { 'Authorization': `Bearer ${token}` }

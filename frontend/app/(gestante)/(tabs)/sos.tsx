@@ -11,7 +11,7 @@ import theme from '../../../src/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../../../src/utils/webStorage';
 import API_URL from '../../../src/config/api';
 import { fetchWithTimeout } from '../../../src/utils/fetchWithTimeout';
 import { OfflineDataService } from '../../../src/services/offline-data.service';
@@ -43,7 +43,7 @@ export default function SosScreen() {
 
   const fetchContacts = async () => {
     try {
-      const token = await SecureStore.getItemAsync('userToken');
+      const token = await getItemAsync('userToken');
       const response = await fetchWithTimeout(`${API_URL}/contactos`, {
         timeout: 12000,
         headers: { 'Authorization': `Bearer ${token}` }
@@ -68,7 +68,7 @@ export default function SosScreen() {
       return;
     }
     const phones = contacts.map(c => c.telefono_principal).join(',');
-    const userWeeks = await SecureStore.getItemAsync('userWeeks') || '??';
+    const userWeeks = await getItemAsync('userWeeks') || '??';
     const mensaje = t('contactos.mensaje_sos', { semanas: userWeeks });
     Linking.openURL(`sms:${phones}?body=${encodeURIComponent(mensaje)}`);
   };

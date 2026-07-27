@@ -7,7 +7,7 @@ import theme from '../../src/theme';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync } from '../../src/utils/webStorage';
 
 export default function BienvenidaScreen() {
   const router = useRouter();
@@ -15,12 +15,12 @@ export default function BienvenidaScreen() {
 
   const handleLanguageChange = async (lang: string) => {
     await i18n.changeLanguage(lang);
-    await SecureStore.setItemAsync('wiksayuq.language', lang);
+    await setItemAsync('wiksayuq.language', lang);
   };
 
   const continueToLogin = async () => {
     const lang = i18n.language === 'qu' ? 'qu' : 'es';
-    await SecureStore.setItemAsync('wiksayuq.language', lang);
+    await setItemAsync('wiksayuq.language', lang);
     router.replace('/(public)/login' as any);
   };
 
