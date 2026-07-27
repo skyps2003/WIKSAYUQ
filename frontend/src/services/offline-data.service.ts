@@ -8,7 +8,7 @@ export type PreferredHealthCenter = {
 
 const CONTACTS_CACHE_PREFIX = 'contactos:';
 const ESTABLISHMENTS_CACHE_KEY = 'establecimientos';
-const preferredCenterKey = (dni: string) => `centro-salud:${dni}`;
+const preferredCenterKey = (dni: string) => `centro-salud-${dni}`;
 
 const getUserScope = async () => (await SecureStore.getItemAsync('userDni')) || 'anonimo';
 
