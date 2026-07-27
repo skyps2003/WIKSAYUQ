@@ -1,4 +1,4 @@
-import { db } from '../../database';
+import { getDB } from '../../database';
 import NetInfo from '@react-native-community/netinfo';
 import * as SecureStore from 'expo-secure-store';
 import API_URL from '../../config/api';
@@ -54,7 +54,7 @@ export class SyncService {
 
   static enqueue(tableName: QueueTable, data: Record<string, any>) {
     const id = createLocalId();
-    db.runSync(
+    getDB().runSync(
       'INSERT INTO sync_queue (id, table_name, operation, data, status, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)',
       [id, tableName, 'CREATE', JSON.stringify({ ...data, offline_id: id }), 'PENDING']
     );
@@ -80,7 +80,7 @@ export class SyncService {
   }
 
   static async pushPendingChanges() {
-    const pending = db.getAllSync<QueueItem>('SELECT * FROM sync_queue WHERE status = "PENDING" ORDER BY created_at ASC');
+    const pending = getDB().getAllSync<QueueItem>('SELECT * FROM sync_queue WHERE status = "PENDING" ORDER BY created_at ASC');
     
     if (pending.length === 0) return;
 
@@ -98,11 +98,11 @@ export class SyncService {
           await OfflineDataService.replaceCachedContact(item.id, json.data);
         }
 
-        db.runSync('UPDATE sync_queue SET status = "SYNCED", error_message = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [item.id]);
+        getDB().runSync('UPDATE sync_queue SET status = "SYNCED", error_message = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [item.id]);
       } catch (error) {
         console.error(`Error pushing item ${item.id}`, error);
         const message = error instanceof Error ? error.message : 'Error desconocido';
-        db.runSync('UPDATE sync_queue SET status = "PENDING", error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [message, item.id]);
+        getDB().runSync('UPDATE sync_queue SET status = "PENDING", error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [message, item.id]);
       }
     }
   }

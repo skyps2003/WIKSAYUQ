@@ -1,9 +1,16 @@
 import * as SQLite from 'expo-sqlite';
 
-export const db = SQLite.openDatabaseSync('wiksayuq.db');
+let _db: SQLite.SQLiteDatabase | null = null;
+
+export const getDB = (): SQLite.SQLiteDatabase => {
+  if (!_db) {
+    _db = SQLite.openDatabaseSync('wiksayuq.db');
+  }
+  return _db;
+};
 
 export const initDB = () => {
-  // Configuración inicial y creación de tablas
+  const db = getDB();
   db.execSync(`
     PRAGMA journal_mode = WAL;
     
@@ -57,6 +64,7 @@ export const initDB = () => {
 };
 
 export const saveCachedData = (cacheKey: string, data: unknown) => {
+  const db = getDB();
   db.runSync(
     'INSERT OR REPLACE INTO offline_cache (cache_key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)',
     [cacheKey, JSON.stringify(data)]
@@ -65,6 +73,7 @@ export const saveCachedData = (cacheKey: string, data: unknown) => {
 
 export const getCachedData = <T>(cacheKey: string, fallback: T): T => {
   try {
+    const db = getDB();
     const row = db.getFirstSync<{ data: string }>('SELECT data FROM offline_cache WHERE cache_key = ?', [cacheKey]);
     return row ? JSON.parse(row.data) as T : fallback;
   } catch {
