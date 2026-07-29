@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FEF4F2"/>
+      <stop offset="1" stop-color="#F8DADB"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#935450" flood-opacity="0.18"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#C94066"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="820" rx="32" fill="url(#bg)"/>
+  <text x="70" y="82" font-family="Arial" font-size="38" font-weight="700" fill="#3F2F31">Arquitectura actual de WIKSAYUQ</text>
+  <text x="70" y="122" font-family="Arial" font-size="20" fill="#7D6A6D">Aplicación móvil, API local y persistencia cloud con soporte offline parcial</text>
+
+  <g filter="url(#shadow)">
+    <rect x="70" y="190" width="360" height="450" rx="30" fill="#FFFFFF"/>
+    <rect x="95" y="215" width="310" height="56" rx="16" fill="#E35B78"/>
+    <text x="250" y="251" text-anchor="middle" font-family="Arial" font-size="26" font-weight="700" fill="#FFFFFF">APP EXPO</text>
+    <text x="115" y="316" font-family="Arial" font-size="22" font-weight="700" fill="#3F2F31">React Native + Expo Router</text>
+    <text x="115" y="358" font-family="Arial" font-size="19" fill="#7D6A6D">• Pantallas de gestante</text>
+    <text x="115" y="395" font-family="Arial" font-size="19" fill="#7D6A6D">• Español / Runasimi</text>
+    <text x="115" y="432" font-family="Arial" font-size="19" fill="#7D6A6D">• SecureStore + SQLite</text>
+    <text x="115" y="469" font-family="Arial" font-size="19" fill="#7D6A6D">• NetInfo y cola offline</text>
+    <rect x="110" y="510" width="280" height="92" rx="18" fill="#FEF4F2" stroke="#E1A5AA" stroke-width="2"/>
+    <text x="250" y="548" text-anchor="middle" font-family="Arial" font-size="18" font-weight="700" fill="#C94066">Estado</text>
+    <text x="250" y="579" text-anchor="middle" font-family="Arial" font-size="17" fill="#3F2F31">MVP de gestante operativo</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="520" y="190" width="360" height="450" rx="30" fill="#FFFFFF"/>
+    <rect x="545" y="215" width="310" height="56" rx="16" fill="#935450"/>
+    <text x="700" y="251" text-anchor="middle" font-family="Arial" font-size="26" font-weight="700" fill="#FFFFFF">API EXPRESS</text>
+    <text x="565" y="316" font-family="Arial" font-size="22" font-weight="700" fill="#3F2F31">Node.js + TypeScript</text>
+    <text x="565" y="358" font-family="Arial" font-size="19" fill="#7D6A6D">• JWT + bcrypt</text>
+    <text x="565" y="395" font-family="Arial" font-size="19" fill="#7D6A6D">• 32 operaciones HTTP</text>
+    <text x="565" y="432" font-family="Arial" font-size="19" fill="#7D6A6D">• Prisma ORM</text>
+    <text x="565" y="469" font-family="Arial" font-size="19" fill="#7D6A6D">• Servicios externos</text>
+    <rect x="560" y="510" width="280" height="92" rx="18" fill="#FEF4F2" stroke="#E1A5AA" stroke-width="2"/>
+    <text x="700" y="548" text-anchor="middle" font-family="Arial" font-size="18" font-weight="700" fill="#C94066">Estado</text>
+    <text x="700" y="579" text-anchor="middle" font-family="Arial" font-size="17" fill="#3F2F31">API funcional con brechas</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="970" y="190" width="360" height="450" rx="30" fill="#FFFFFF"/>
+    <rect x="995" y="215" width="310" height="56" rx="16" fill="#6E9A73"/>
+    <text x="1150" y="251" text-anchor="middle" font-family="Arial" font-size="26" font-weight="700" fill="#FFFFFF">POSTGRESQL</text>
+    <text x="1015" y="316" font-family="Arial" font-size="22" font-weight="700" fill="#3F2F31">Supabase cloud previsto</text>
+    <text x="1015" y="358" font-family="Arial" font-size="19" fill="#7D6A6D">• 34 modelos Prisma</text>
+    <text x="1015" y="395" font-family="Arial" font-size="19" fill="#7D6A6D">• Datos clínicos y perfiles</text>
+    <text x="1015" y="432" font-family="Arial" font-size="19" fill="#7D6A6D">• Alertas y mensajería</text>
+    <text x="1015" y="469" font-family="Arial" font-size="19" fill="#7D6A6D">• Catálogos y auditoría</text>
+    <rect x="1010" y="510" width="280" height="92" rx="18" fill="#FEF4F2" stroke="#E1A5AA" stroke-width="2"/>
+    <text x="1150" y="548" text-anchor="middle" font-family="Arial" font-size="18" font-weight="700" fill="#C94066">Estado</text>
+    <text x="1150" y="579" text-anchor="middle" font-family="Arial" font-size="17" fill="#3F2F31">Esquema amplio, uso parcial</text>
+  </g>
+
+  <line x1="430" y1="410" x2="510" y2="410" stroke="#C94066" stroke-width="5" marker-end="url(#arrow)"/>
+  <text x="470" y="387" text-anchor="middle" font-family="Arial" font-size="16" fill="#3F2F31">HTTP/JWT</text>
+  <line x1="880" y1="410" x2="960" y2="410" stroke="#C94066" stroke-width="5" marker-end="url(#arrow)"/>
+  <text x="920" y="387" text-anchor="middle" font-family="Arial" font-size="16" fill="#3F2F31">SQL</text>
+
+  <rect x="70" y="700" width="1260" height="70" rx="18" fill="#3F2F31"/>
+  <text x="700" y="743" text-anchor="middle" font-family="Arial" font-size="21" fill="#FFFFFF">Despliegue actual: backend en PC local + misma red WiFi. Para producción se requiere HTTPS y backend público.</text>
+</svg>

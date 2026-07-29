@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <defs><filter id="s3"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#3F2F31" flood-opacity="0.12"/></filter></defs>
+  <rect width="1400" height="900" rx="32" fill="#FEF4F2"/>
+  <text x="70" y="78" font-family="Arial" font-size="38" font-weight="700" fill="#3F2F31">Mapa funcional y estado de implementación</text>
+  <text x="70" y="118" font-family="Arial" font-size="20" fill="#7D6A6D">Verde: implementado · Ámbar: parcial · Gris: no evidenciado</text>
+
+  <rect x="70" y="170" width="1260" height="105" rx="24" fill="#3F2F31"/>
+  <text x="700" y="216" text-anchor="middle" font-family="Arial" font-size="26" font-weight="700" fill="#FFFFFF">GESTANTE</text>
+  <text x="700" y="250" text-anchor="middle" font-family="Arial" font-size="18" fill="#F8DADB">Actor con interfaz funcional principal</text>
+
+  <g font-family="Arial" filter="url(#s3)">
+    <g><rect x="70" y="320" width="280" height="120" rx="22" fill="#E8F5E9" stroke="#6E9A73" stroke-width="3"/><text x="95" y="365" font-size="21" font-weight="700" fill="#2E6A37">Acceso e idioma</text><text x="95" y="402" font-size="17" fill="#3F2F31">Registro, login, ES/QU</text></g>
+    <g><rect x="385" y="320" width="280" height="120" rx="22" fill="#E8F5E9" stroke="#6E9A73" stroke-width="3"/><text x="410" y="365" font-size="21" font-weight="700" fill="#2E6A37">Seguimiento</text><text x="410" y="402" font-size="17" fill="#3F2F31">Semana, hitos y peso</text></g>
+    <g><rect x="700" y="320" width="280" height="120" rx="22" fill="#FFF5D8" stroke="#C47A00" stroke-width="3"/><text x="725" y="365" font-size="21" font-weight="700" fill="#8A5600">Atención prenatal</text><text x="725" y="402" font-size="17" fill="#3F2F31">Controles, citas, vacunas</text></g>
+    <g><rect x="1015" y="320" width="280" height="120" rx="22" fill="#FFF5D8" stroke="#C47A00" stroke-width="3"/><text x="1040" y="365" font-size="21" font-weight="700" fill="#8A5600">Offline y sync</text><text x="1040" y="402" font-size="17" fill="#3F2F31">SQLite, caché y cola</text></g>
+    <g><rect x="70" y="475" width="280" height="120" rx="22" fill="#FFF5D8" stroke="#C47A00" stroke-width="3"/><text x="95" y="520" font-size="21" font-weight="700" fill="#8A5600">Autoevaluación</text><text x="95" y="557" font-size="17" fill="#3F2F31">UI sin persistencia API</text></g>
+    <g><rect x="385" y="475" width="280" height="120" rx="22" fill="#FFF5D8" stroke="#C47A00" stroke-width="3"/><text x="410" y="520" font-size="21" font-weight="700" fill="#8A5600">SOS y emergencia</text><text x="410" y="557" font-size="17" fill="#3F2F31">Acciones críticas incompletas</text></g>
+    <g><rect x="700" y="475" width="280" height="120" rx="22" fill="#E8F5E9" stroke="#6E9A73" stroke-width="3"/><text x="725" y="520" font-size="21" font-weight="700" fill="#2E6A37">Educación</text><text x="725" y="557" font-size="17" fill="#3F2F31">Consejos y videos</text></g>
+    <g><rect x="1015" y="475" width="280" height="120" rx="22" fill="#FFF5D8" stroke="#C47A00" stroke-width="3"/><text x="1040" y="520" font-size="21" font-weight="700" fill="#8A5600">Centros/contactos</text><text x="1040" y="557" font-size="17" fill="#3F2F31">Mapa y gestión parcial</text></g>
+  </g>
+
+  <rect x="70" y="655" width="390" height="160" rx="24" fill="#EDEDED" stroke="#9B9B9B" stroke-width="3"/>
+  <text x="265" y="703" text-anchor="middle" font-family="Arial" font-size="23" font-weight="700" fill="#555555">PERSONAL DE SALUD</text>
+  <text x="265" y="744" text-anchor="middle" font-family="Arial" font-size="18" fill="#555555">Backend y esquema parciales</text>
+  <text x="265" y="778" text-anchor="middle" font-family="Arial" font-size="18" fill="#555555">Sin pantallas funcionales</text>
+
+  <rect x="505" y="655" width="390" height="160" rx="24" fill="#EDEDED" stroke="#9B9B9B" stroke-width="3"/>
+  <text x="700" y="703" text-anchor="middle" font-family="Arial" font-size="23" font-weight="700" fill="#555555">ADMINISTRACIÓN</text>
+  <text x="700" y="744" text-anchor="middle" font-family="Arial" font-size="18" fill="#555555">Rol y modelos disponibles</text>
+  <text x="700" y="778" text-anchor="middle" font-family="Arial" font-size="18" fill="#555555">Sin UI ni operaciones</text>
+
+  <rect x="940" y="655" width="390" height="160" rx="24" fill="#EDEDED" stroke="#9B9B9B" stroke-width="3"/>
+  <text x="1135" y="703" text-anchor="middle" font-family="Arial" font-size="23" font-weight="700" fill="#555555">MÓDULOS FUTUROS</text>
+  <text x="1135" y="744" text-anchor="middle" font-family="Arial" font-size="18" fill="#555555">Alertas, exámenes, push</text>
+  <text x="1135" y="778" text-anchor="middle" font-family="Arial" font-size="18" fill="#555555">auditoría y conflictos sync</text>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="800" viewBox="0 0 1400 800">
+  <rect width="1400" height="800" rx="32" fill="#FFFFFF"/>
+  <text x="70" y="80" font-family="Arial" font-size="38" font-weight="700" fill="#3F2F31">Sistema visual e IHC</text>
+  <text x="70" y="120" font-family="Arial" font-size="20" fill="#7D6A6D">Paleta implementada en frontend/src/theme/colors.ts</text>
+  <g font-family="Arial">
+    <g><rect x="70" y="180" width="280" height="150" rx="22" fill="#E35B78"/><text x="95" y="245" font-size="24" font-weight="700" fill="#FFFFFF">Primary</text><text x="95" y="285" font-size="20" fill="#FFFFFF">#E35B78</text></g>
+    <g><rect x="385" y="180" width="280" height="150" rx="22" fill="#C94066"/><text x="410" y="245" font-size="24" font-weight="700" fill="#FFFFFF">Primary dark</text><text x="410" y="285" font-size="20" fill="#FFFFFF">#C94066</text></g>
+    <g><rect x="700" y="180" width="280" height="150" rx="22" fill="#D9818B"/><text x="725" y="245" font-size="24" font-weight="700" fill="#FFFFFF">Secondary</text><text x="725" y="285" font-size="20" fill="#FFFFFF">#D9818B</text></g>
+    <g><rect x="1015" y="180" width="280" height="150" rx="22" fill="#935450"/><text x="1040" y="245" font-size="24" font-weight="700" fill="#FFFFFF">Terracotta</text><text x="1040" y="285" font-size="20" fill="#FFFFFF">#935450</text></g>
+    <g><rect x="70" y="365" width="280" height="150" rx="22" fill="#FEF4F2" stroke="#E1A5AA" stroke-width="2"/><text x="95" y="430" font-size="24" font-weight="700" fill="#3F2F31">Background</text><text x="95" y="470" font-size="20" fill="#3F2F31">#FEF4F2</text></g>
+    <g><rect x="385" y="365" width="280" height="150" rx="22" fill="#F8DADB"/><text x="410" y="430" font-size="24" font-weight="700" fill="#3F2F31">Rose light</text><text x="410" y="470" font-size="20" fill="#3F2F31">#F8DADB</text></g>
+    <g><rect x="700" y="365" width="280" height="150" rx="22" fill="#6E9A73"/><text x="725" y="430" font-size="24" font-weight="700" fill="#FFFFFF">Success</text><text x="725" y="470" font-size="20" fill="#FFFFFF">#6E9A73</text></g>
+    <g><rect x="1015" y="365" width="280" height="150" rx="22" fill="#F05A5A"/><text x="1040" y="430" font-size="24" font-weight="700" fill="#FFFFFF">Danger</text><text x="1040" y="470" font-size="20" fill="#FFFFFF">#F05A5A</text></g>
+  </g>
+  <rect x="70" y="580" width="1225" height="145" rx="24" fill="#3F2F31"/>
+  <text x="105" y="627" font-family="Arial" font-size="24" font-weight="700" fill="#FFFFFF">Principios IHC observados</text>
+  <text x="105" y="669" font-family="Arial" font-size="19" fill="#F8DADB">Contexto cultural andino · navegación móvil · tarjetas redondeadas · feedback offline · español y quechua</text>
+  <text x="105" y="704" font-family="Arial" font-size="18" fill="#FFFFFF">Pendiente: contraste AA, etiquetas accesibles, foco en modales, rehidratación de fuente y movimiento reducido.</text>
+</svg>

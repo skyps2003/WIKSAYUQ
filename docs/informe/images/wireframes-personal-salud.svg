@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1000" viewBox="0 0 1500 1000">
+  <defs><filter id="phone2"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#3F2F31" flood-opacity="0.18"/></filter></defs>
+  <rect width="1500" height="1000" rx="32" fill="#F4F7F4"/>
+  <rect x="1120" y="38" width="300" height="54" rx="27" fill="#C94066"/>
+  <text x="1270" y="73" text-anchor="middle" font-family="Arial" font-size="20" font-weight="700" fill="#FFFFFF">PROPUESTA FUTURA</text>
+  <text x="70" y="72" font-family="Arial" font-size="38" font-weight="700" fill="#3F2F31">Wireframes — personal de salud</text>
+  <text x="70" y="112" font-family="Arial" font-size="20" fill="#7D6A6D">Módulo no implementado actualmente; referencia para el backlog</text>
+
+  <g transform="translate(90 160)" filter="url(#phone2)" font-family="Arial">
+    <rect width="380" height="750" rx="45" fill="#FFFFFF" stroke="#3F2F31" stroke-width="5"/>
+    <rect x="130" y="16" width="120" height="18" rx="9" fill="#3F2F31"/>
+    <text x="28" y="85" font-size="18" fill="#7D6A6D">Lic. Ana Quispe</text>
+    <text x="28" y="122" font-size="28" font-weight="700" fill="#3F2F31">Resumen del día</text>
+    <rect x="25" y="155" width="155" height="105" rx="20" fill="#E8F5E9"/><rect x="200" y="155" width="155" height="105" rx="20" fill="#FDECEC"/>
+    <text x="102" y="200" text-anchor="middle" font-size="34" font-weight="700" fill="#2E6A37">8</text><text x="102" y="232" text-anchor="middle" font-size="15" fill="#3F2F31">Citas</text>
+    <text x="277" y="200" text-anchor="middle" font-size="34" font-weight="700" fill="#C62828">3</text><text x="277" y="232" text-anchor="middle" font-size="15" fill="#3F2F31">Alertas</text>
+    <text x="28" y="314" font-size="22" font-weight="700" fill="#3F2F31">Próximas atenciones</text>
+    <g fill="#FEF4F2" stroke="#E1A5AA"><rect x="25" y="340" width="330" height="92" rx="18"/><rect x="25" y="448" width="330" height="92" rx="18"/></g>
+    <text x="48" y="378" font-size="18" font-weight="700" fill="#C94066">09:00 · María C.</text><text x="48" y="408" font-size="15" fill="#3F2F31">Control prenatal · 24 semanas</text>
+    <text x="48" y="486" font-size="18" font-weight="700" fill="#C94066">10:30 · Rosa H.</text><text x="48" y="516" font-size="15" fill="#3F2F31">Vacunación · 30 semanas</text>
+    <rect x="25" y="585" width="330" height="70" rx="20" fill="#6E9A73"/><text x="190" y="628" text-anchor="middle" font-size="19" font-weight="700" fill="#FFFFFF">Ver agenda completa</text>
+  </g>
+
+  <g transform="translate(560 160)" filter="url(#phone2)" font-family="Arial">
+    <rect width="380" height="750" rx="45" fill="#FFFFFF" stroke="#3F2F31" stroke-width="5"/>
+    <rect x="130" y="16" width="120" height="18" rx="9" fill="#3F2F31"/>
+    <text x="30" y="88" font-size="27" font-weight="700" fill="#3F2F31">Gestantes asignadas</text>
+    <rect x="25" y="120" width="330" height="58" rx="18" fill="#F4F4F4"/><text x="55" y="156" font-size="17" fill="#7D6A6D">Buscar por DNI o nombre</text>
+    <g><rect x="25" y="210" width="330" height="118" rx="20" fill="#FFFFFF" stroke="#E1A5AA"/><circle cx="78" cy="269" r="32" fill="#F8DADB"/><text x="125" y="252" font-size="19" font-weight="700" fill="#3F2F31">María Condori</text><text x="125" y="282" font-size="16" fill="#7D6A6D">24 semanas · Riesgo bajo</text><text x="125" y="306" font-size="14" fill="#6E9A73">Control al día</text></g>
+    <g><rect x="25" y="345" width="330" height="118" rx="20" fill="#FDECEC" stroke="#F05A5A"/><circle cx="78" cy="404" r="32" fill="#FFFFFF"/><text x="125" y="387" font-size="19" font-weight="700" fill="#3F2F31">Rosa Huamán</text><text x="125" y="417" font-size="16" fill="#7D6A6D">31 semanas · Riesgo alto</text><text x="125" y="441" font-size="14" fill="#C62828">Alerta sin atender</text></g>
+    <g><rect x="25" y="480" width="330" height="118" rx="20" fill="#FFFFFF" stroke="#E1A5AA"/><circle cx="78" cy="539" r="32" fill="#F8DADB"/><text x="125" y="522" font-size="19" font-weight="700" fill="#3F2F31">Julia Flores</text><text x="125" y="552" font-size="16" fill="#7D6A6D">18 semanas · Riesgo medio</text><text x="125" y="576" font-size="14" fill="#C47A00">Cita pendiente</text></g>
+  </g>
+
+  <g transform="translate(1030 160)" filter="url(#phone2)" font-family="Arial">
+    <rect width="380" height="750" rx="45" fill="#FFFFFF" stroke="#3F2F31" stroke-width="5"/>
+    <rect x="130" y="16" width="120" height="18" rx="9" fill="#3F2F31"/>
+    <text x="30" y="90" font-size="27" font-weight="700" fill="#3F2F31">Alerta crítica</text>
+    <rect x="25" y="125" width="330" height="120" rx="20" fill="#FDECEC" stroke="#F05A5A" stroke-width="3"/>
+    <text x="48" y="166" font-size="20" font-weight="700" fill="#C62828">Rosa Huamán</text>
+    <text x="48" y="198" font-size="16" fill="#3F2F31">Sangrado y dolor intenso</text>
+    <text x="48" y="225" font-size="14" fill="#7D6A6D">Reportado hace 4 minutos</text>
+    <text x="30" y="300" font-size="21" font-weight="700" fill="#3F2F31">Acciones inmediatas</text>
+    <rect x="25" y="325" width="330" height="68" rx="20" fill="#F05A5A"/><text x="190" y="367" text-anchor="middle" font-size="19" font-weight="700" fill="#FFFFFF">Llamar a la gestante</text>
+    <rect x="25" y="410" width="330" height="68" rx="20" fill="#3F2F31"/><text x="190" y="452" text-anchor="middle" font-size="19" font-weight="700" fill="#FFFFFF">Coordinar referencia</text>
+    <text x="30" y="535" font-size="21" font-weight="700" fill="#3F2F31">Seguimiento</text>
+    <rect x="25" y="560" width="330" height="90" rx="18" fill="#F4F4F4"/><text x="45" y="595" font-size="16" fill="#7D6A6D">Registrar respuesta, estado</text><text x="45" y="623" font-size="16" fill="#7D6A6D">y establecimiento de referencia</text>
+  </g>
+</svg>

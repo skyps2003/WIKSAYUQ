@@ -61,6 +61,70 @@ export const initDB = () => {
       updated_at DATETIME,
       sync_status TEXT DEFAULT 'SYNCED'
     );
+
+    CREATE TABLE IF NOT EXISTS controles (
+      id TEXT PRIMARY KEY,
+      gestante_id TEXT,
+      fecha_control TEXT,
+      establecimiento_id TEXT,
+      peso_kg REAL,
+      presion_sistolica INTEGER,
+      presion_diastolica INTEGER,
+      semana_gestacion INTEGER,
+      created_at TEXT,
+      updated_at TEXT,
+      sync_status TEXT DEFAULT 'PENDING'
+    );
+
+    CREATE TABLE IF NOT EXISTS citas (
+      id TEXT PRIMARY KEY,
+      gestante_id TEXT,
+      fecha_programada TEXT,
+      establecimiento_id TEXT,
+      motivo TEXT,
+      tipo TEXT DEFAULT 'OTRO',
+      created_at TEXT,
+      updated_at TEXT,
+      sync_status TEXT DEFAULT 'PENDING'
+    );
+
+    CREATE TABLE IF NOT EXISTS vacunas (
+      id TEXT PRIMARY KEY,
+      gestante_id TEXT,
+      nombre_vacuna TEXT,
+      descripcion_vacuna TEXT,
+      estado TEXT DEFAULT 'PENDIENTE',
+      fecha_aplicacion TEXT,
+      fecha_programada TEXT,
+      establecimiento_id TEXT,
+      created_at TEXT,
+      updated_at TEXT,
+      sync_status TEXT DEFAULT 'PENDING'
+    );
+
+    CREATE TABLE IF NOT EXISTS contactos (
+      id TEXT PRIMARY KEY,
+      gestante_id TEXT,
+      nombre TEXT,
+      parentesco TEXT,
+      telefono TEXT,
+      es_principal INTEGER DEFAULT 0,
+      created_at TEXT,
+      updated_at TEXT,
+      sync_status TEXT DEFAULT 'PENDING'
+    );
+
+    CREATE TABLE IF NOT EXISTS establecimientos (
+      id TEXT PRIMARY KEY,
+      nombre TEXT,
+      direccion TEXT,
+      latitud REAL,
+      longitud REAL,
+      telefono TEXT,
+      horario TEXT,
+      created_at TEXT,
+      updated_at TEXT
+    );
   `);
 
   try {

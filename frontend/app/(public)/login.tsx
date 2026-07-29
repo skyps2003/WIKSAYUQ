@@ -52,20 +52,6 @@ export default function LoginScreen() {
     loadLanguagePreference();
   }, []);
 
-  const handleOfflineMode = async () => {
-    await clearUserSessionData();
-    await setItemAsync('isLoggedIn', 'true');
-    await setItemAsync('userName', 'María');
-    await setItemAsync('userFullName', 'María Quispe Huamán');
-    await setItemAsync('userDni', '12345678');
-    await setItemAsync('userRole', 'gestante');
-    await setItemAsync('userFum', '2026-03-15');
-    await setItemAsync('userWeeks', '19');
-    await setItemAsync('userTrimester', 'segundo_trimestre');
-    await setItemAsync('offlineMode', 'true');
-    router.replace('/(gestante)/(tabs)/inicio' as any);
-  };
-
   const handleLogin = async () => {
     if (!dni || !pin) {
       showError("Error", t('login.dni') + " / " + t('login.pin'));
@@ -289,16 +275,6 @@ export default function LoginScreen() {
                 </AppText>
                 <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
               </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.offlineButton}
-                onPress={handleOfflineMode}
-              >
-                <MaterialCommunityIcons name="wifi-off" size={18} color="#999" />
-                <AppText variant="body2" style={styles.offlineButtonText}>
-                  Entrar sin internet (Demo)
-                </AppText>
-              </TouchableOpacity>
             </View>
 
           </ScrollView>
@@ -462,16 +438,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
   },
-  offlineButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.s,
-    padding: theme.spacing.m,
-    marginTop: theme.spacing.s,
-  },
-  offlineButtonText: {
-    color: '#999',
-    fontSize: 14,
-  }
 });
