@@ -275,6 +275,13 @@ export default function LoginScreen() {
                 </AppText>
                 <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
               </TouchableOpacity>
+
+              <View style={styles.academicNotice}>
+                <MaterialCommunityIcons name="information-outline" size={18} color={theme.colors.terracotta} />
+                <AppText variant="caption" style={styles.academicNoticeText}>
+                  Este sistema es un prototipo académico y no reemplaza la evaluación, diagnóstico o recomendación de un profesional de la salud.
+                </AppText>
+              </View>
             </View>
 
           </ScrollView>
@@ -437,5 +444,21 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontWeight: '600',
     fontSize: 16,
+  },
+  academicNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: theme.spacing.s,
+    marginTop: theme.spacing.m,
+    padding: theme.spacing.m,
+    backgroundColor: 'rgba(255,255,255,0.82)',
+    borderRadius: theme.radius.m,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  academicNoticeText: {
+    flex: 1,
+    color: theme.colors.textSecondary,
+    lineHeight: 18,
   },
 });

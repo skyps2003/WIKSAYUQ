@@ -182,6 +182,26 @@ Express aplica Helmet, CORS, JSON de 8 MB, Morgan y límites de solicitudes. Las
 
 La interfaz usa una identidad maternal y andina mediante ilustraciones, rosados cálidos, fondos crema, tarjetas redondeadas e iconos familiares. La navegación principal de gestante tiene Inicio, Calendario, SOS, Historial y Perfil. El diseño es mobile-first y está bloqueado a orientación vertical.
 
+### Paleta de colores implementada
+
+| Token | Valor hexadecimal | Uso principal |
+| --- | --- | --- |
+| `primary` | `#E35B78` | Botones y acciones principales |
+| `primaryDark` | `#C94066` | Estados presionados, énfasis y títulos de marca |
+| `secondary` | `#D9818B` | Acentos secundarios |
+| `background` | `#FEF4F2` | Fondo principal cálido |
+| `backgroundSoft` | `#FEE8E8` | Secciones y superficies suaves |
+| `surface` | `#FFFFFF` | Tarjetas, campos y modales |
+| `roseLight` | `#F8DADB` | Chips, selecciones y fondos decorativos |
+| `border` | `#E1A5AA` | Bordes y separadores |
+| `textPrimary` | `#3F2F31` | Texto principal de alto contraste |
+| `textSecondary` | `#7D6A6D` | Texto auxiliar y descripciones |
+| `danger` | `#F05A5A` | Emergencias, errores y alertas críticas |
+| `success` | `#6E9A73` | Confirmaciones y estados correctos |
+| `terracotta` | `#935450` | Acento cultural andino y avisos informativos |
+
+El texto principal `#3F2F31` sobre el fondo `#FEF4F2` alcanza aproximadamente 11.69:1 y el texto secundario 4.68:1. En cambio, blanco sobre `#E35B78` alcanza aproximadamente 3.48:1, por lo que debe reservarse para texto grande o sustituirse por una combinación de mayor contraste para cumplir WCAG AA en texto normal.
+
 ### Principios de IHC observados
 
 - Contextualización cultural mediante marca, paisaje y representación de una gestante andina.
@@ -289,3 +309,5 @@ Los wireframes no representan funcionalidad terminada; constituyen requisitos vi
 ## 18. Conclusión
 
 WIKSAYUQ posee una base sólida para demostración y validación con gestantes: identidad cultural diferenciada, seguimiento prenatal básico y estrategia offline. Para convertirse en un sistema clínico confiable debe cerrar primero seguridad, funciones de emergencia, sincronización, personal de salud y pruebas. Este documento debe mantenerse como línea base: todo requisito nuevo deberá agregarse con responsable, prioridad, criterio de aceptación y evidencia de prueba.
+
+> **Advertencia:** Este sistema es un prototipo académico y no reemplaza la evaluación, diagnóstico o recomendación de un profesional de la salud.

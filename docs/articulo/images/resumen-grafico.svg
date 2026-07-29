@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="700" viewBox="0 0 1400 700" role="img" aria-labelledby="title desc">
+  <title id="title">Resumen gráfico de WIKSAYUQ</title>
+  <desc id="desc">Flujo desde la necesidad de acompañamiento prenatal intercultural hasta una aplicación móvil con operación offline, sincronización y seguimiento.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FEF4F2"/>
+      <stop offset="1" stop-color="#F8DADB"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#935450" flood-opacity="0.16"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#935450"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="700" rx="38" fill="url(#bg)"/>
+  <text x="70" y="78" fill="#3F2F31" font-family="Arial, sans-serif" font-size="34" font-weight="700">WIKSAYUQ: acompañamiento prenatal intercultural y resiliente</text>
+  <text x="70" y="116" fill="#7D6A6D" font-family="Arial, sans-serif" font-size="20">Del problema territorial a una solución móvil verificable</text>
+
+  <g filter="url(#shadow)">
+    <rect x="65" y="175" width="330" height="390" rx="28" fill="#FFFFFF" stroke="#E1A5AA" stroke-width="2"/>
+    <circle cx="230" cy="255" r="58" fill="#FEE8E8"/>
+    <path d="M210 265c0-34 42-34 42 0v26h-42z" fill="#E35B78"/>
+    <circle cx="230" cy="230" r="20" fill="#D9818B"/>
+    <text x="230" y="347" text-anchor="middle" fill="#3F2F31" font-family="Arial, sans-serif" font-size="26" font-weight="700">Necesidad</text>
+    <text x="230" y="392" text-anchor="middle" fill="#7D6A6D" font-family="Arial, sans-serif" font-size="18">Información prenatal dispersa</text>
+    <text x="230" y="425" text-anchor="middle" fill="#7D6A6D" font-family="Arial, sans-serif" font-size="18">Conectividad intermitente</text>
+    <text x="230" y="458" text-anchor="middle" fill="#7D6A6D" font-family="Arial, sans-serif" font-size="18">Barreras culturales y lingüísticas</text>
+    <text x="230" y="507" text-anchor="middle" fill="#935450" font-family="Arial, sans-serif" font-size="17" font-weight="700">Contexto rural andino</text>
+  </g>
+
+  <path d="M415 370 H495" fill="none" stroke="#935450" stroke-width="5" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="515" y="145" width="370" height="450" rx="32" fill="#FFFFFF" stroke="#E35B78" stroke-width="3"/>
+    <rect x="620" y="188" width="160" height="320" rx="24" fill="#FEF4F2" stroke="#3F2F31" stroke-width="5"/>
+    <rect x="638" y="228" width="124" height="64" rx="14" fill="#E35B78"/>
+    <rect x="638" y="310" width="58" height="76" rx="12" fill="#F8DADB"/>
+    <rect x="704" y="310" width="58" height="76" rx="12" fill="#FEE8E8"/>
+    <rect x="638" y="404" width="124" height="54" rx="12" fill="#FFFFFF" stroke="#E1A5AA" stroke-width="2"/>
+    <circle cx="700" cy="484" r="9" fill="#3F2F31"/>
+    <text x="700" y="548" text-anchor="middle" fill="#3F2F31" font-family="Arial, sans-serif" font-size="26" font-weight="700">Aplicación móvil</text>
+    <text x="700" y="580" text-anchor="middle" fill="#7D6A6D" font-family="Arial, sans-serif" font-size="17">Expo + React Native</text>
+  </g>
+
+  <path d="M905 370 H985" fill="none" stroke="#935450" stroke-width="5" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="1005" y="175" width="330" height="390" rx="28" fill="#FFFFFF" stroke="#E1A5AA" stroke-width="2"/>
+    <circle cx="1082" cy="259" r="35" fill="#F8DADB"/>
+    <path d="M1067 260l10 10 22-26" fill="none" stroke="#6E9A73" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="1170" cy="259" r="35" fill="#FEE8E8"/>
+    <path d="M1151 259h38M1170 240v38" stroke="#E35B78" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="1258" cy="259" r="35" fill="#F8DADB"/>
+    <path d="M1239 262c12-30 26-30 38 0-12 18-26 18-38 0z" fill="none" stroke="#935450" stroke-width="6"/>
+    <text x="1170" y="347" text-anchor="middle" fill="#3F2F31" font-family="Arial, sans-serif" font-size="26" font-weight="700">Capacidades</text>
+    <text x="1170" y="392" text-anchor="middle" fill="#7D6A6D" font-family="Arial, sans-serif" font-size="18">Controles y citas prenatales</text>
+    <text x="1170" y="425" text-anchor="middle" fill="#7D6A6D" font-family="Arial, sans-serif" font-size="18">Contactos y señales de alarma</text>
+    <text x="1170" y="458" text-anchor="middle" fill="#7D6A6D" font-family="Arial, sans-serif" font-size="18">Persistencia offline + sincronización</text>
+    <text x="1170" y="507" text-anchor="middle" fill="#6E9A73" font-family="Arial, sans-serif" font-size="17" font-weight="700">Continuidad de uso</text>
+  </g>
+
+  <rect x="270" y="625" width="860" height="42" rx="21" fill="#935450"/>
+  <text x="700" y="653" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="18" font-weight="700">Prototipo académico: complementa el acompañamiento y no sustituye la atención profesional</text>
+</svg>
