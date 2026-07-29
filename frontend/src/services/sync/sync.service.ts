@@ -1,8 +1,12 @@
 import { getDB } from '../../database';
 import NetInfo from '@react-native-community/netinfo';
 import API_URL from '../../config/api';
-import { OfflineDataService } from '../offline-data.service';
-import { getItemAsync, setItemAsync } from '../../utils/webStorage';
+import { getItemAsync } from '../../utils/webStorage';
+import { controlRepo } from '../../database/repositories/control.repository';
+import { citaRepo } from '../../database/repositories/cita.repository';
+import { vacunaRepo } from '../../database/repositories/vacuna.repository';
+import { contactoRepo } from '../../database/repositories/contacto.repository';
+import { establecimientoRepo } from '../../database/repositories/establecimiento.repository';
 
 type QueueTable = 'controles' | 'citas' | 'vacunas' | 'contactos';
 
@@ -27,91 +31,120 @@ const ENDPOINTS: Record<QueueTable, string> = {
 
 const createLocalId = () => `local-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
+const REPOS = {
+  controles: controlRepo,
+  citas: citaRepo,
+  vacunas: vacunaRepo,
+  contactos: contactoRepo,
+} as const;
+
 export class SyncService {
   static async saveOrQueue({ tableName, data }: SaveOrQueueParams) {
+    const repo = REPOS[tableName];
+    const localId = createLocalId();
+    const now = new Date().toISOString();
+
+    const localRecord = {
+      id: localId,
+      ...data,
+      sync_status: 'PENDING' as const,
+      created_at: now,
+      updated_at: now,
+    };
+
+    await repo.upsert(localRecord as any);
+    this.enqueue(tableName, data, localId);
+
     const netInfo = await NetInfo.fetch();
-
-    if (!netInfo.isConnected || netInfo.isInternetReachable === false) {
-      const localId = this.enqueue(tableName, data);
-      return { success: true, queued: true, localId };
-    }
-
-    try {
-      const response = await this.post(tableName, data);
-      const json = await response.json();
-
-      if (!response.ok || !json.success) {
-        return { success: false, queued: false, message: json.message || 'No se pudo guardar' };
+    if (netInfo.isConnected && netInfo.isInternetReachable !== false) {
+      try {
+        const response = await this.post(tableName, data);
+        const json = await response.json();
+        if (response.ok && json.success) {
+          await repo.markSynced(localId, { ...json.data, sync_status: 'SYNCED' });
+          return { success: true, synced: true, data: json.data, localId };
+        }
+      } catch {
+        return { success: true, synced: false, localId };
       }
-
-      await this.sync();
-      return { success: true, queued: false, data: json.data };
-    } catch {
-      const localId = this.enqueue(tableName, data);
-      return { success: true, queued: true, localId };
     }
+
+    return { success: true, synced: false, localId };
   }
 
-  static enqueue(tableName: QueueTable, data: Record<string, any>) {
-    const id = createLocalId();
-    getDB().runSync(
-      'INSERT INTO sync_queue (id, table_name, operation, data, status, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)',
-      [id, tableName, 'CREATE', JSON.stringify({ ...data, offline_id: id }), 'PENDING']
+  static enqueue(tableName: QueueTable, data: Record<string, any>, localId: string) {
+    const db = getDB();
+    if (!db) return;
+    db.runSync(
+      'INSERT OR REPLACE INTO sync_queue (id, table_name, operation, data, status, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)',
+      [localId, tableName, 'CREATE', JSON.stringify({ ...data, offline_id: localId }), 'PENDING']
     );
-    return id;
   }
 
   static async sync() {
     const netInfo = await NetInfo.fetch();
     if (!netInfo.isConnected || netInfo.isInternetReachable === false) {
-      console.log('No internet connection, skipping sync.');
       return;
     }
 
-    console.log('Starting sync process...');
-    
-    // 1. PUSH: Subir operaciones pendientes de la cola local
     await this.pushPendingChanges();
-
-    // 2. PULL: Bajar cambios recientes del servidor
-    await this.pullRecentChanges();
-
-    console.log('Sync process completed.');
+    await this.pullAll();
   }
 
   static async pushPendingChanges() {
-    const pending = getDB().getAllSync<QueueItem>('SELECT * FROM sync_queue WHERE status = "PENDING" ORDER BY created_at ASC');
-    
+    const db = getDB();
+    if (!db) return;
+    const pending = db.getAllSync<QueueItem>('SELECT * FROM sync_queue WHERE status = "PENDING" ORDER BY created_at ASC');
     if (pending.length === 0) return;
 
     for (const item of pending) {
       try {
-        console.log(`Pushing ${item.operation} on ${item.table_name}`, item.data);
         const response = await this.post(item.table_name, JSON.parse(item.data));
         const json = await response.json();
-
         if (!response.ok || !json.success) {
           throw new Error(json.message || 'No se pudo sincronizar');
         }
 
-        if (item.table_name === 'contactos') {
-          await OfflineDataService.replaceCachedContact(item.id, json.data);
-        }
+        const repo = REPOS[item.table_name];
+        await repo.markSynced(item.id, json.data);
 
-        getDB().runSync('UPDATE sync_queue SET status = "SYNCED", error_message = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [item.id]);
+        db.runSync('DELETE FROM sync_queue WHERE id = ?', [item.id]);
       } catch (error) {
-        console.error(`Error pushing item ${item.id}`, error);
         const message = error instanceof Error ? error.message : 'Error desconocido';
-        getDB().runSync('UPDATE sync_queue SET status = "PENDING", error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [message, item.id]);
+        db.runSync('UPDATE sync_queue SET error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [message, item.id]);
       }
     }
   }
 
-  static async pullRecentChanges() {
-    // Simulación: obtener cambios desde la API basándose en last_sync_date
-    console.log('Pulling changes from server...');
-    // const changes = await apiClient.get('/sync/pull?lastSync=' + lastSyncDate);
-    // Aplicar a SQLite
+  static async pullAll() {
+    const token = await getItemAsync('userToken');
+    if (!token) return;
+    const headers = { Authorization: `Bearer ${token}` };
+
+    const endpoints = [
+      { url: '/controles', repo: controlRepo, map: mapControl },
+      { url: '/citas', repo: citaRepo, map: mapCita },
+      { url: '/vacunas/mis-vacunas', repo: vacunaRepo, map: mapVacuna },
+      { url: '/contactos', repo: contactoRepo, map: mapContacto },
+      { url: '/establecimientos', repo: establecimientoRepo, map: mapEstablecimiento },
+    ];
+
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(`${API_URL}${ep.url}`, { headers });
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          const records = json.data.map(ep.map);
+          await ep.repo.upsertMany(records as any);
+        }
+      } catch (e) {
+        console.warn(`Sync pull failed for ${ep.url}:`, e);
+      }
+    }
+  }
+
+  static async pullAllFromBackground() {
+    await this.pullAll();
   }
 
   private static async post(tableName: QueueTable, data: Record<string, any>) {
@@ -126,3 +159,67 @@ export class SyncService {
     });
   }
 }
+
+const mapControl = (item: any) => ({
+  id: String(item.id),
+  gestante_id: item.gestante_id,
+  fecha_control: item.fecha_control,
+  establecimiento_id: item.establecimiento_id,
+  peso_kg: item.peso_kg ? parseFloat(item.peso_kg) : undefined,
+  presion_sistolica: item.presion_sistolica,
+  presion_diastolica: item.presion_diastolica,
+  semana_gestacion: item.semanas_gestacion || 0,
+  created_at: item.created_at,
+  updated_at: item.updated_at,
+  sync_status: 'SYNCED',
+});
+
+const mapCita = (item: any) => ({
+  id: String(item.id),
+  gestante_id: item.gestante_id,
+  fecha_programada: item.fecha_programada,
+  establecimiento_id: item.establecimiento_id,
+  motivo: item.motivo,
+  tipo: item.tipo || 'OTRO',
+  created_at: item.created_at,
+  updated_at: item.updated_at,
+  sync_status: 'SYNCED',
+});
+
+const mapVacuna = (item: any) => ({
+  id: String(item.id),
+  gestante_id: item.gestante_id,
+  nombre_vacuna: item.nombre_vacuna,
+  descripcion_vacuna: item.descripcion_vacuna,
+  estado: item.estado || 'PENDIENTE',
+  fecha_aplicacion: item.fecha_aplicacion,
+  fecha_programada: item.fecha_programada,
+  establecimiento_id: item.establecimiento_id,
+  created_at: item.created_at,
+  updated_at: item.updated_at,
+  sync_status: 'SYNCED',
+});
+
+const mapContacto = (item: any) => ({
+  id: String(item.id),
+  gestante_id: item.gestante_id,
+  nombre: item.nombre,
+  parentesco: item.parentesco,
+  telefono: item.telefono_principal || item.telefono,
+  es_principal: item.es_principal ? 1 : 0,
+  created_at: item.created_at,
+  updated_at: item.updated_at,
+  sync_status: 'SYNCED',
+});
+
+const mapEstablecimiento = (item: any) => ({
+  id: String(item.id),
+  nombre: item.nombre,
+  direccion: item.direccion,
+  latitud: item.latitud ? parseFloat(item.latitud) : undefined,
+  longitud: item.longitud ? parseFloat(item.longitud) : undefined,
+  telefono: item.telefono,
+  horario: item.horario,
+  created_at: item.created_at,
+  updated_at: item.updated_at,
+});

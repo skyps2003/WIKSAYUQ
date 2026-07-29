@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1000" viewBox="0 0 1500 1000">
+  <defs><filter id="phone"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#3F2F31" flood-opacity="0.18"/></filter></defs>
+  <rect width="1500" height="1000" rx="32" fill="#FEF4F2"/>
+  <text x="70" y="72" font-family="Arial" font-size="38" font-weight="700" fill="#3F2F31">Wireframes de referencia — experiencia gestante</text>
+  <text x="70" y="112" font-family="Arial" font-size="20" fill="#7D6A6D">Propuesta para futuras implementaciones, basada en la arquitectura actual</text>
+
+  <g transform="translate(90 160)" filter="url(#phone)" font-family="Arial">
+    <rect width="380" height="750" rx="45" fill="#FFFFFF" stroke="#3F2F31" stroke-width="5"/>
+    <rect x="130" y="16" width="120" height="18" rx="9" fill="#3F2F31"/>
+    <text x="28" y="78" font-size="18" fill="#7D6A6D">Buenos días, María</text>
+    <text x="28" y="112" font-size="27" font-weight="700" fill="#3F2F31">Tu embarazo</text>
+    <rect x="25" y="140" width="330" height="150" rx="24" fill="#E35B78"/>
+    <text x="50" y="188" font-size="17" fill="#FFFFFF">SEMANA ACTUAL</text>
+    <text x="50" y="240" font-size="46" font-weight="700" fill="#FFFFFF">24</text>
+    <text x="130" y="240" font-size="19" fill="#FFFFFF">Segundo trimestre</text>
+    <text x="28" y="338" font-size="22" font-weight="700" fill="#3F2F31">Próximo control</text>
+    <rect x="25" y="360" width="330" height="105" rx="20" fill="#FEF4F2" stroke="#E1A5AA"/>
+    <text x="48" y="400" font-size="18" font-weight="700" fill="#C94066">12 AGO · 09:30</text>
+    <text x="48" y="435" font-size="17" fill="#3F2F31">Centro de Salud Tamburco</text>
+    <text x="28" y="515" font-size="22" font-weight="700" fill="#3F2F31">Accesos rápidos</text>
+    <g fill="#F8DADB" stroke="#E1A5AA"><rect x="25" y="540" width="100" height="95" rx="18"/><rect x="140" y="540" width="100" height="95" rx="18"/><rect x="255" y="540" width="100" height="95" rx="18"/></g>
+    <text x="75" y="580" text-anchor="middle" font-size="25" fill="#C94066">+</text><text x="75" y="610" text-anchor="middle" font-size="13" fill="#3F2F31">Registrar</text>
+    <text x="190" y="580" text-anchor="middle" font-size="25" fill="#C94066">!</text><text x="190" y="610" text-anchor="middle" font-size="13" fill="#3F2F31">Evaluarme</text>
+    <text x="305" y="580" text-anchor="middle" font-size="25" fill="#C94066">⌖</text><text x="305" y="610" text-anchor="middle" font-size="13" fill="#3F2F31">Centros</text>
+    <rect x="0" y="680" width="380" height="70" rx="0 0 40 40" fill="#FFFFFF" stroke="#F8DADB"/>
+    <text x="190" y="724" text-anchor="middle" font-size="16" fill="#C94066">Inicio   Agenda   SOS   Historial   Perfil</text>
+  </g>
+
+  <g transform="translate(560 160)" filter="url(#phone)" font-family="Arial">
+    <rect width="380" height="750" rx="45" fill="#FFFFFF" stroke="#3F2F31" stroke-width="5"/>
+    <rect x="130" y="16" width="120" height="18" rx="9" fill="#3F2F31"/>
+    <text x="30" y="90" font-size="27" font-weight="700" fill="#3F2F31">Autoevaluación</text>
+    <text x="30" y="127" font-size="17" fill="#7D6A6D">Pregunta 3 de 7</text>
+    <rect x="30" y="150" width="320" height="10" rx="5" fill="#F8DADB"/><rect x="30" y="150" width="138" height="10" rx="5" fill="#E35B78"/>
+    <circle cx="190" cy="250" r="64" fill="#FEF4F2" stroke="#E1A5AA" stroke-width="3"/>
+    <text x="190" y="265" text-anchor="middle" font-size="48" font-weight="700" fill="#E35B78">?</text>
+    <text x="190" y="354" text-anchor="middle" font-size="22" font-weight="700" fill="#3F2F31">¿Tienes dolor de cabeza</text>
+    <text x="190" y="385" text-anchor="middle" font-size="22" font-weight="700" fill="#3F2F31">intenso o visión borrosa?</text>
+    <rect x="30" y="445" width="320" height="72" rx="22" fill="#FFFFFF" stroke="#E35B78" stroke-width="3"/>
+    <text x="190" y="489" text-anchor="middle" font-size="22" font-weight="700" fill="#C94066">Sí</text>
+    <rect x="30" y="535" width="320" height="72" rx="22" fill="#E35B78"/>
+    <text x="190" y="579" text-anchor="middle" font-size="22" font-weight="700" fill="#FFFFFF">No</text>
+    <text x="190" y="652" text-anchor="middle" font-size="16" fill="#7D6A6D">Puedes volver y cambiar tu respuesta</text>
+  </g>
+
+  <g transform="translate(1030 160)" filter="url(#phone)" font-family="Arial">
+    <rect width="380" height="750" rx="45" fill="#FFFFFF" stroke="#3F2F31" stroke-width="5"/>
+    <rect x="130" y="16" width="120" height="18" rx="9" fill="#3F2F31"/>
+    <text x="190" y="88" text-anchor="middle" font-size="28" font-weight="700" fill="#C62828">Emergencia</text>
+    <circle cx="190" cy="260" r="115" fill="#FDECEC" stroke="#F05A5A" stroke-width="8"/>
+    <circle cx="190" cy="260" r="82" fill="#F05A5A"/>
+    <text x="190" y="248" text-anchor="middle" font-size="34" font-weight="700" fill="#FFFFFF">SOS</text>
+    <text x="190" y="282" text-anchor="middle" font-size="15" fill="#FFFFFF">MANTÉN PULSADO</text>
+    <text x="190" y="420" text-anchor="middle" font-size="19" font-weight="700" fill="#3F2F31">Al activar:</text>
+    <text x="65" y="462" font-size="17" fill="#3F2F31">1. Registra ubicación</text>
+    <text x="65" y="496" font-size="17" fill="#3F2F31">2. Avisa a tus contactos</text>
+    <text x="65" y="530" font-size="17" fill="#3F2F31">3. Ofrece llamar al 106</text>
+    <rect x="30" y="585" width="320" height="72" rx="22" fill="#3F2F31"/>
+    <text x="190" y="629" text-anchor="middle" font-size="20" font-weight="700" fill="#FFFFFF">Llamar al SAMU 106</text>
+    <text x="190" y="700" text-anchor="middle" font-size="15" fill="#7D6A6D">Confirmación y opción de cancelar</text>
+  </g>
+</svg>

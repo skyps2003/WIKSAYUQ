@@ -200,10 +200,10 @@ export default function ControlesRegistroScreen() {
         data: { fecha_control: dateControl.toISOString(), establecimiento_id: estControl === 'custom' ? null : estControl, peso_kg: peso, presion_sistolica: paSis, presion_diastolica: paDia, fum }
       });
       if (data.success) {
-        showToast({ message: data.queued ? 'Control guardado sin internet. Se sincronizará luego.' : `Control ${t('controles.exito_guardar')}`, type: 'success' });
+        showToast({ message: !data.synced ? 'Control guardado sin internet. Se sincronizará luego.' : `Control ${t('controles.exito_guardar')}`, type: 'success' });
         setPeso(''); setPaSis(''); setPaDia('');
       } else {
-        showToast({ message: data.message || 'No se pudo guardar el control prenatal', type: 'error' });
+        showToast({ message: 'No se pudo guardar el control prenatal', type: 'error' });
       }
     } catch {
       showToast({ message: t('controles.error_conexion'), type: 'error' });
@@ -227,10 +227,10 @@ export default function ControlesRegistroScreen() {
         data: { fecha_programada: combinedDate.toISOString(), establecimiento_id: estCita === 'custom' ? null : estCita, motivo, tipo: 'OTRO', fum }
       });
       if (data.success) {
-        showToast({ message: data.queued ? 'Cita guardada sin internet. Se sincronizará luego.' : `Cita ${t('controles.exito_guardar')}`, type: 'success' });
+        showToast({ message: !data.synced ? 'Cita guardada sin internet. Se sincronizará luego.' : `Cita ${t('controles.exito_guardar')}`, type: 'success' });
         setMotivo('');
       } else {
-        showToast({ message: data.message, type: 'error' });
+        showToast({ message: 'No se pudo guardar la cita', type: 'error' });
       }
     } catch {
       showToast({ message: t('controles.error_conexion'), type: 'error' });
@@ -254,10 +254,10 @@ export default function ControlesRegistroScreen() {
       }
       const data = await SyncService.saveOrQueue({ tableName: 'vacunas', data: body });
       if (data.success) {
-        showToast({ message: data.queued ? 'Vacuna guardada sin internet. Se sincronizará luego.' : `Vacuna ${t('controles.exito_guardar')}`, type: 'success' });
+        showToast({ message: !data.synced ? 'Vacuna guardada sin internet. Se sincronizará luego.' : `Vacuna ${t('controles.exito_guardar')}`, type: 'success' });
         setNombreVacuna(''); setDescripcionVacuna(''); setVacunaEstado('APLICADA'); setHasMoreDosis(false);
       } else {
-        showToast({ message: data.message, type: 'error' });
+        showToast({ message: 'No se pudo guardar la vacuna', type: 'error' });
       }
     } catch {
       showToast({ message: t('controles.error_conexion'), type: 'error' });

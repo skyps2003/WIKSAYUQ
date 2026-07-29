@@ -13,7 +13,7 @@ import { spacing } from '../../src/theme/spacing';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
 import API_URL from '../../src/config/api';
 import { calculateGestationalWeeks } from '../../src/utils/gestation';
-import { db } from '../../src/database';
+import { getDB } from '../../src/database';
 
 type TabType = 'controles' | 'vacunas';
 type DetailItem = { type: 'control' | 'vacuna'; item: any };
@@ -65,9 +65,13 @@ export default function HistorialScreen() {
     }
   };
 
-  const getPendingRows = () => db.getAllSync<{ id: string; table_name: string; data: string }>(
-    'SELECT id, table_name, data FROM sync_queue WHERE status = "PENDING" ORDER BY created_at DESC'
-  );
+  const getPendingRows = () => {
+    const db = getDB();
+    if (!db) return [];
+    return db.getAllSync<{ id: string; table_name: string; data: string }>(
+      'SELECT id, table_name, data FROM sync_queue WHERE status = "PENDING" ORDER BY created_at DESC'
+    );
+  };
 
   const getPendingControls = () => getPendingRows()
     .filter((item) => item.table_name === 'controles')

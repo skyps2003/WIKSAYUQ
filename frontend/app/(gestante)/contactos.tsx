@@ -82,7 +82,7 @@ export default function ContactosScreen() {
       });
 
       if (result.success) {
-        const contacto = result.queued
+        const contacto = !result.synced
           ? {
               id: result.localId,
               nombres,
@@ -97,7 +97,7 @@ export default function ContactosScreen() {
         setContactos(updatedContactos);
         await OfflineDataService.cacheContacts(updatedContactos);
         showToast({
-          message: result.queued ? 'Contacto guardado sin internet. Se sincronizará al reconectar.' : t('contactos.exito_agregar'),
+          message: !result.synced ? 'Contacto guardado sin internet. Se sincronizará al reconectar.' : t('contactos.exito_agregar'),
           type: 'success',
           duration: 4500,
         });
@@ -106,7 +106,7 @@ export default function ContactosScreen() {
         setParentesco('');
         setTelefono('');
       } else {
-        showToast({ message: result.message || t('contactos.error_conexion'), type: 'error' });
+        showToast({ message: 'No se pudo guardar el contacto', type: 'error' });
       }
     } catch (error) {
       console.error(error);
