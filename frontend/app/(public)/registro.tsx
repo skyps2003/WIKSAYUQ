@@ -55,6 +55,15 @@ export default function RegistroScreen() {
   const [aceptaTratamiento, setAceptaTratamiento] = useState(false);
   const [dniError, setDniError] = useState('');
 
+  const goBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/(public)/login' as any);
+  };
+
   const loadProvincias = async () => {
     try {
       setLoadingProvincias(true);
@@ -297,7 +306,7 @@ export default function RegistroScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={goBack} style={styles.backButton}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.textPrimary} />
         </TouchableOpacity>
         <AppText variant="h3" style={styles.headerTitle}>{t('registro.titulo')}</AppText>
