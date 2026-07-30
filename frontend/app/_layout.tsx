@@ -11,12 +11,17 @@ export default function RootLayout() {
   const [showOfflineNotice, setShowOfflineNotice] = useState(false);
 
   useEffect(() => {
-    try {
-      initDB();
-      SyncService.sync();
-    } catch (e) {
-      console.error('Error initializing DB:', e);
-    }
+    const initialize = async () => {
+      try {
+        initDB();
+        await SyncService.sync();
+      } catch (error) {
+        // Offline support is optional at startup and must not block the app.
+        console.error('Error initializing offline support:', error);
+      }
+    };
+
+    void initialize();
 
     const unsubscribe = NetInfo.addEventListener((state) => {
       const isOffline = state.isConnected === false || state.isInternetReachable === false;
@@ -24,7 +29,9 @@ export default function RootLayout() {
 
       if (isOnline) {
         setShowOfflineNotice(false);
-        SyncService.sync();
+        void SyncService.sync().catch((error) => {
+          console.error('Error synchronizing offline data:', error);
+        });
       } else if (isOffline) {
         setShowOfflineNotice(true);
       }

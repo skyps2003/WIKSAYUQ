@@ -8,13 +8,27 @@ import { rateLimit } from 'express-rate-limit';
 dotenv.config();
 
 const app: Application = express();
+const corsOrigins = process.env.CORS_ORIGINS
+  ?.split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean) ?? [];
 
 // Render terminates TLS at its proxy and forwards the original client address.
 app.set('trust proxy', 1);
 
 // Security Middlewares
 app.use(helmet());
-app.use(cors({ origin: process.env.CORS_ORIGINS || '*' }));
+app.use(cors({
+  origin(origin, callback) {
+    // Browsers require one Access-Control-Allow-Origin value, never a CSV list.
+    if (!origin || corsOrigins.length === 0 || corsOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error(`Origin not allowed by CORS: ${origin}`));
+  },
+}));
 app.use(express.json({ limit: '8mb' })); // Para aceptar Base64 grandes según MAX_BASE64_IMAGE_MB
 app.use(express.urlencoded({ extended: true, limit: '8mb' }));
 app.use(morgan('dev'));
