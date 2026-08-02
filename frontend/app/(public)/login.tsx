@@ -14,6 +14,7 @@ import { fetchWithTimeout, readApiResponse } from '../../src/utils/fetchWithTime
 import { clearUserSessionData } from '../../src/utils/userSession';
 import { calculateGestationalWeeks, getTrimesterKey } from '../../src/utils/gestation';
 import { OfflineDataService } from '../../src/services/offline-data.service';
+import { SyncService } from '../../src/services/sync/sync.service';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -115,6 +116,12 @@ export default function LoginScreen() {
           await setItemAsync('userCentroSalud', preferredCenter.nombre);
           await OfflineDataService.savePreferredHealthCenter(preferredCenter, user.dni);
         }
+
+        // The token now exists, so hydrate SQLite for authenticated screens.
+        // A temporary sync failure must never block a valid online login.
+        void SyncService.sync().catch((syncError) => {
+          console.warn('No se pudo actualizar la copia local:', syncError);
+        });
         
         if (user.rol === 'PERSONAL_SALUD') {
           router.replace('/(personal-salud)/(tabs)/inicio' as any);

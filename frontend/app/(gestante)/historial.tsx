@@ -14,6 +14,10 @@ import { ScreenHeader } from '../../src/components/ScreenHeader';
 import API_URL from '../../src/config/api';
 import { calculateGestationalWeeks } from '../../src/utils/gestation';
 import { getDB } from '../../src/database';
+import { SyncService } from '../../src/services/sync/sync.service';
+import { citaRepo } from '../../src/database/repositories/cita.repository';
+import { vacunaRepo } from '../../src/database/repositories/vacuna.repository';
+import { fetchWithTimeout, readApiResponse } from '../../src/utils/fetchWithTimeout';
 
 type TabType = 'controles' | 'vacunas';
 type DetailItem = { type: 'control' | 'vacuna'; item: any };
@@ -44,14 +48,15 @@ export default function HistorialScreen() {
       setUserCentroSaludId(storedCentroSaludId || '');
       setUserFum(storedFum || '');
       loadPendingRecords();
+      await SyncService.sync();
       
       const [resCitas, resVacunas] = await Promise.all([
-        fetch(`${API_URL}/citas`, { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch(`${API_URL}/vacunas/mis-vacunas`, { headers: { 'Authorization': `Bearer ${token}` } })
+        fetchWithTimeout(`${API_URL}/citas`, { headers: { 'Authorization': `Bearer ${token}` }, timeout: 15000 }),
+        fetchWithTimeout(`${API_URL}/vacunas/mis-vacunas`, { headers: { 'Authorization': `Bearer ${token}` }, timeout: 15000 })
       ]);
 
-      const dataCitas = await resCitas.json();
-      const dataVac = await resVacunas.json();
+      const dataCitas = await readApiResponse<any>(resCitas);
+      const dataVac = await readApiResponse<any>(resVacunas);
 
       if (dataCitas.success) {
         // Filter only past appointments or those with controles
@@ -61,7 +66,9 @@ export default function HistorialScreen() {
       if (dataVac.success) setVacunasUsuario([...getPendingVaccines(), ...dataVac.data]);
     } catch (error) {
       console.error(error);
-      loadPendingRecords();
+      const [cachedCitas, cachedVacunas] = await Promise.all([citaRepo.getAll(), vacunaRepo.getAll()]);
+      setCitas(cachedCitas);
+      setVacunasUsuario(cachedVacunas);
     }
   };
 

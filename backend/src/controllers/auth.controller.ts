@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../config/database';
+import { prisma, isDatabaseConnectionError } from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.JWT_ACCESS_SECRET || '';
@@ -178,6 +178,13 @@ export const register = async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Registration error:', error);
+    if (isDatabaseConnectionError(error)) {
+      return res.status(503).json({
+        success: false,
+        code: 'DB_UNAVAILABLE',
+        message: 'La base de datos no está disponible. Intenta de nuevo en unos minutos.',
+      });
+    }
     res.status(500).json({ success: false, message: 'Error en el registro del usuario' });
   }
 };
@@ -253,6 +260,13 @@ export const login = async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Login error:', error);
+    if (isDatabaseConnectionError(error)) {
+      return res.status(503).json({
+        success: false,
+        code: 'DB_UNAVAILABLE',
+        message: 'La base de datos no está disponible. Intenta de nuevo en unos minutos.',
+      });
+    }
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 };
@@ -282,6 +296,13 @@ export const changePin = async (req: AuthRequest, res: Response) => {
 
   } catch (error) {
     console.error('Change PIN error:', error);
+    if (isDatabaseConnectionError(error)) {
+      return res.status(503).json({
+        success: false,
+        code: 'DB_UNAVAILABLE',
+        message: 'La base de datos no está disponible. Intenta de nuevo en unos minutos.',
+      });
+    }
     res.status(500).json({ success: false, message: 'Error al cambiar el PIN' });
   }
 };

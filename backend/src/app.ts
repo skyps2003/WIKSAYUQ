@@ -62,12 +62,17 @@ const authLimiter = rateLimit({
   },
 });
 
-// Basic Health Endpoint
-app.get('/api/health', (req: Request, res: Response) => {
-  res.json({
-    success: true,
-    message: 'WIKSAYUQ API funcionando',
-    database: 'connected', // Mapear más adelante a una verificación real de DB
+import { isDatabaseHealthy } from './config/database';
+
+// Health Endpoint — verifica la conexión real a la base de datos
+app.get('/api/health', async (req: Request, res: Response) => {
+  const dbOk = await isDatabaseHealthy();
+  const status = dbOk ? 200 : 503;
+  res.status(status).json({
+    success: dbOk,
+    message: dbOk ? 'WIKSAYUQ API funcionando' : 'Base de datos no disponible',
+    database: dbOk ? 'connected' : 'disconnected',
+    version: 'v2-db-check',
     provider: process.env.DATABASE_PROVIDER || 'local',
     timestamp: new Date().toISOString()
   });
@@ -109,9 +114,21 @@ app.use((req: Request, res: Response) => {
   res.status(404).json({ success: false, message: 'Ruta no encontrada', errors: [] });
 });
 
-// Error Handler Global (por implementar detalle)
+// Error Handler Global — intercepta errores de conexión a DB para todos los controllers
+import { isDatabaseConnectionError } from './config/database';
+
 app.use((err: any, req: Request, res: Response, next: any) => {
   console.error(err.stack);
+
+  // Database unreachable / bad credentials / pool exhausted → 503
+  if (isDatabaseConnectionError(err)) {
+    return res.status(503).json({
+      success: false,
+      code: 'DB_UNAVAILABLE',
+      message: 'La base de datos no está disponible. Intenta de nuevo en unos minutos.',
+    });
+  }
+
   const status = Number(err.status || err.statusCode) || 500;
   const message = status === 413
     ? 'La imagen seleccionada es demasiado grande. Intenta con otra imagen.'

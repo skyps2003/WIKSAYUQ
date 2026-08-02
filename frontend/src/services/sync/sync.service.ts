@@ -7,6 +7,7 @@ import { citaRepo } from '../../database/repositories/cita.repository';
 import { vacunaRepo } from '../../database/repositories/vacuna.repository';
 import { contactoRepo } from '../../database/repositories/contacto.repository';
 import { establecimientoRepo } from '../../database/repositories/establecimiento.repository';
+import { fetchWithTimeout, readApiResponse } from '../../utils/fetchWithTimeout';
 
 type QueueTable = 'controles' | 'citas' | 'vacunas' | 'contactos';
 
@@ -59,7 +60,7 @@ export class SyncService {
     if (netInfo.isConnected && netInfo.isInternetReachable !== false) {
       try {
         const response = await this.post(tableName, data);
-        const json = await response.json();
+        const json = await readApiResponse<any>(response);
         if (response.ok && json.success) {
           await repo.markSynced(localId, { ...json.data, sync_status: 'SYNCED' });
           return { success: true, synced: true, data: json.data, localId };
@@ -100,7 +101,7 @@ export class SyncService {
     for (const item of pending) {
       try {
         const response = await this.post(item.table_name, JSON.parse(item.data));
-        const json = await response.json();
+        const json = await readApiResponse<any>(response);
         if (!response.ok || !json.success) {
           throw new Error(json.message || 'No se pudo sincronizar');
         }
@@ -131,9 +132,9 @@ export class SyncService {
 
     for (const ep of endpoints) {
       try {
-        const res = await fetch(`${API_URL}${ep.url}`, { headers });
-        const json = await res.json();
-        if (json.success && Array.isArray(json.data)) {
+        const res = await fetchWithTimeout(`${API_URL}${ep.url}`, { headers, timeout: 15000 });
+        const json = await readApiResponse<any>(res);
+        if (res.ok && json.success && Array.isArray(json.data)) {
           const records = json.data.map(ep.map);
           await ep.repo.upsertMany(records as any);
         }
@@ -149,13 +150,14 @@ export class SyncService {
 
   private static async post(tableName: QueueTable, data: Record<string, any>) {
     const token = await getItemAsync('userToken');
-    return fetch(`${API_URL}${ENDPOINTS[tableName]}`, {
+    return fetchWithTimeout(`${API_URL}${ENDPOINTS[tableName]}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(data),
+      timeout: 20000,
     });
   }
 }

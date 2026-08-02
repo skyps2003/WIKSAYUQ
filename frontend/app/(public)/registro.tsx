@@ -16,6 +16,7 @@ import { useKeyboardHeight } from '../../src/hooks/useKeyboardHeight';
 import { fetchWithTimeout, readApiResponse } from '../../src/utils/fetchWithTimeout';
 import { useToast } from '../../src/components/AppToast';
 import { OfflineDataService } from '../../src/services/offline-data.service';
+import { APURIMAC_DEPARTMENT_ID, APURIMAC_PROVINCES, getApurimacDistricts } from '../../src/data/apurimacUbigeo';
 
 export default function RegistroScreen() {
   const router = useRouter();
@@ -65,29 +66,20 @@ export default function RegistroScreen() {
   };
 
   const loadProvincias = async () => {
+    setProvinciasList(APURIMAC_PROVINCES);
+    setLoadingProvincias(false);
+    setProvinciasError('');
     try {
-      setLoadingProvincias(true);
-      setProvinciasError('');
-      console.log('[API] Cargando provincias desde:', `${API_URL}/ubigeo/provincias/00000000-0000-0000-0000-000000000003`);
-      const res = await fetchWithTimeout(`${API_URL}/ubigeo/provincias/00000000-0000-0000-0000-000000000003`, { timeout: 15000 });
-      const json = await res.json();
+      console.log('[API] Cargando provincias desde:', `${API_URL}/ubigeo/provincias/${APURIMAC_DEPARTMENT_ID}`);
+      const res = await fetchWithTimeout(`${API_URL}/ubigeo/provincias/${APURIMAC_DEPARTMENT_ID}`, { timeout: 5000 });
+      const json = await readApiResponse<any>(res);
       console.log('[API] Provincias respuesta:', json.success ? `${json.data?.length} provincias` : 'error');
 
-      if (!res.ok || !json.success) {
-        throw new Error(json.message || 'No se pudieron cargar las provincias');
+      if (res.ok && json.success && Array.isArray(json.data) && json.data.length > 0) {
+        setProvinciasList(json.data);
       }
-
-      setProvinciasList(json.data || []);
     } catch (e: any) {
-      console.error('[API] Error loading provincias:', e?.message || e);
-      setProvinciasError('No se pudieron cargar las provincias. Puedes reintentar o continuar sin seleccionar ubicación.');
-      showToast({
-        message: 'No se pudieron cargar provincias. Puedes reintentar o continuar.',
-        type: 'info',
-        duration: 4500,
-      });
-    } finally {
-      setLoadingProvincias(false);
+      console.warn('[API] Ubigeo remoto no disponible; usando catálogo local:', e?.message || e);
     }
   };
 
@@ -134,16 +126,17 @@ export default function RegistroScreen() {
     setModalVisible(true);
 
     if (type === 'distrito' && provincia) {
-      setLoadingData(true);
+      setDistritosList(getApurimacDistricts(provincia.id));
+      setLoadingData(false);
       try {
-        const res = await fetchWithTimeout(`${API_URL}/ubigeo/distritos/${provincia.id}`, { timeout: 12000 });
-        const data = await res.json();
-        if (data.success) setDistritosList(data.data);
-      } catch (e) {
-        console.error(e);
-        showToast({ message: 'No se pudieron cargar distritos. Intenta otra vez.', type: 'error' });
+        const res = await fetchWithTimeout(`${API_URL}/ubigeo/distritos/${provincia.id}`, { timeout: 5000 });
+        const data = await readApiResponse<any>(res);
+        if (res.ok && data.success && Array.isArray(data.data) && data.data.length > 0) {
+          setDistritosList(data.data);
+        }
+      } catch (e: any) {
+        console.warn('[API] Distritos remotos no disponibles; usando catálogo local:', e?.message || e);
       }
-      finally { setLoadingData(false); }
     }
   };
 

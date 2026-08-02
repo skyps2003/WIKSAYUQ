@@ -1,7 +1,13 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
+import { APURIMAC_DEPARTMENT, APURIMAC_PROVINCES, getApurimacDistricts } from '../data/apurimac-ubigeo';
 
 export const getDepartamentos = async (req: Request, res: Response) => {
+  // La aplicaciÃ³n trabaja en ApurÃ­mac. Esta referencia estable no debe quedar
+  // bloqueada si el proveedor de base de datos estÃ¡ iniciando o sin conexiones.
+  if (req.query.local === 'true') {
+    return res.json({ success: true, data: [APURIMAC_DEPARTMENT] });
+  }
   try {
     const departamentos = await prisma.departamentos.findMany({
       orderBy: { nombre: 'asc' }
@@ -16,6 +22,9 @@ export const getDepartamentos = async (req: Request, res: Response) => {
 export const getProvincias = async (req: Request, res: Response) => {
   try {
     const { departamento_id } = req.params;
+    if (departamento_id === APURIMAC_DEPARTMENT.id) {
+      return res.json({ success: true, data: APURIMAC_PROVINCES, source: 'reference' });
+    }
     const provincias = await prisma.provincias.findMany({
       where: { departamento_id },
       orderBy: { nombre: 'asc' }
@@ -30,6 +39,10 @@ export const getProvincias = async (req: Request, res: Response) => {
 export const getDistritos = async (req: Request, res: Response) => {
   try {
     const { provincia_id } = req.params;
+    const referenceDistricts = getApurimacDistricts(provincia_id);
+    if (referenceDistricts.length > 0) {
+      return res.json({ success: true, data: referenceDistricts, source: 'reference' });
+    }
     const distritos = await prisma.distritos.findMany({
       where: { provincia_id },
       orderBy: { nombre: 'asc' }

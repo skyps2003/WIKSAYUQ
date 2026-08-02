@@ -1,0 +1,1047 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "debian-openssl-1.1.x", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model auth_users {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email              String?   @unique @db.VarChar(150)
+  phone              String?   @unique @db.VarChar(20)
+  encrypted_password String?
+  email_confirmed_at DateTime? @db.Timestamp(6)
+  phone_confirmed_at DateTime? @db.Timestamp(6)
+  last_sign_in_at    DateTime? @db.Timestamp(6)
+  created_at         DateTime? @db.Timestamp(6)
+  updated_at         DateTime? @db.Timestamp(6)
+  perfiles           perfiles?
+}
+
+model perfiles {
+  id                        String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombres                   String                      @db.VarChar(100)
+  apellido_paterno          String                      @db.VarChar(80)
+  apellido_materno          String?                     @db.VarChar(80)
+  tipo_documento            tipo_documento              @default(DNI)
+  numero_documento          String                      @unique @db.VarChar(20)
+  fecha_nacimiento          DateTime?                   @db.Date
+  sexo                      sexo_usuario?               @default(NO_ESPECIFICA)
+  telefono                  String?                     @db.VarChar(20)
+  direccion                 String?
+  idioma_preferido          idioma_usuario              @default(ESPANOL)
+  rol                       rol_usuario
+  estado                    estado_usuario              @default(ACTIVO)
+  foto_url                  String?
+  acepta_terminos           Boolean                     @default(false)
+  acepta_tratamiento_datos  Boolean                     @default(false)
+  fecha_aceptacion_datos    DateTime?                   @db.Timestamp(6)
+  created_at                DateTime                    @default(now()) @db.Timestamp(6)
+  updated_at                DateTime                    @default(now()) @db.Timestamp(6)
+  deleted_at                DateTime?                   @db.Timestamp(6)
+  version                   Int                         @default(1)
+  foto_base64               String?
+  auditoria                 auditoria[]
+  citas                     citas[]
+  conflictos_sincronizacion conflictos_sincronizacion[]
+  consejos                  consejos[]
+  dispositivos              dispositivos[]
+  embarazo_factores_riesgo  embarazo_factores_riesgo[]
+  gestantes                 gestantes?
+  notificaciones            notificaciones[]
+  auth_users                auth_users                  @relation(fields: [id], references: [id], onDelete: Cascade, map: "fk_perfiles_auth_users")
+  personal_salud            personal_salud?
+  resultados_examenes       resultados_examenes[]
+  sync_queue                sync_queue[]
+
+  @@index([estado])
+  @@index([rol])
+  @@index([telefono])
+}
+
+model gestantes {
+  id                       String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  perfil_id                String                  @unique @db.Uuid
+  comunidad_id             String?                 @db.Uuid
+  establecimiento_id       String?                 @db.Uuid
+  codigo_gestante          String?                 @unique @db.VarChar(30)
+  grado_instruccion        String?                 @db.VarChar(80)
+  ocupacion                String?                 @db.VarChar(100)
+  estado_civil             String?                 @db.VarChar(50)
+  numero_hijos             Int                     @default(0)
+  numero_embarazos_previos Int                     @default(0)
+  numero_partos_previos    Int                     @default(0)
+  numero_abortos_previos   Int                     @default(0)
+  grupo_sanguineo          String?                 @db.VarChar(5)
+  factor_rh                String?                 @db.VarChar(10)
+  tiene_seguro             Boolean                 @default(false)
+  tipo_seguro              String?                 @db.VarChar(50)
+  numero_seguro            String?                 @db.VarChar(50)
+  observaciones_generales  String?
+  activo                   Boolean                 @default(true)
+  created_at               DateTime                @default(now()) @db.Timestamp(6)
+  updated_at               DateTime                @default(now()) @db.Timestamp(6)
+  deleted_at               DateTime?               @db.Timestamp(6)
+  version                  Int                     @default(1)
+  asignaciones_gestante    asignaciones_gestante[]
+  consejos_visualizados    consejos_visualizados[]
+  contactos_emergencia     contactos_emergencia[]
+  embarazos                embarazos[]
+  eventos_sos              eventos_sos[]
+  perfiles                 perfiles                @relation(fields: [perfil_id], references: [id], onDelete: Cascade, map: "fk_gestantes_perfiles")
+  comunidades              comunidades?            @relation(fields: [comunidad_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  establecimientos_salud   establecimientos_salud? @relation(fields: [establecimiento_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([activo])
+  @@index([comunidad_id])
+  @@index([establecimiento_id])
+}
+
+model personal_salud {
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  perfil_id              String                  @unique @db.Uuid
+  establecimiento_id     String                  @db.Uuid
+  tipo_personal          tipo_personal_salud
+  numero_colegiatura     String?                 @db.VarChar(30)
+  especialidad           String?                 @db.VarChar(100)
+  cargo                  String?                 @db.VarChar(100)
+  fecha_ingreso          DateTime?               @db.Date
+  activo                 Boolean                 @default(true)
+  created_at             DateTime                @default(now()) @db.Timestamp(6)
+  updated_at             DateTime                @default(now()) @db.Timestamp(6)
+  deleted_at             DateTime?               @db.Timestamp(6)
+  version                Int                     @default(1)
+  alertas                alertas[]
+  asignaciones_gestante  asignaciones_gestante[]
+  citas                  citas[]
+  controles_prenatales   controles_prenatales[]
+  perfiles               perfiles                @relation(fields: [perfil_id], references: [id], onDelete: Cascade, map: "fk_personal_salud_perfiles")
+  establecimientos_salud establecimientos_salud  @relation(fields: [establecimiento_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vacunas_gestante       vacunas_gestante[]
+
+  @@index([establecimiento_id])
+  @@index([numero_colegiatura])
+  @@index([tipo_personal])
+}
+
+model conversaciones {
+  id                String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gestante_id       String     @db.Uuid
+  personal_salud_id String     @db.Uuid
+  activa            Boolean    @default(true)
+  created_at        DateTime   @default(now()) @db.Timestamp(6)
+  updated_at        DateTime   @default(now()) @db.Timestamp(6)
+  deleted_at        DateTime?  @db.Timestamp(6)
+  version           Int        @default(1)
+  mensajes          mensajes[]
+
+  @@index([gestante_id], map: "idx_conversaciones_gestante")
+}
+
+model mensajes {
+  id                  String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversacion_id     String         @db.Uuid
+  remitente_perfil_id String         @db.Uuid
+  contenido           String
+  leido               Boolean        @default(false)
+  fecha_lectura       DateTime?      @db.Timestamp(6)
+  created_at          DateTime       @default(now()) @db.Timestamp(6)
+  updated_at          DateTime       @default(now()) @db.Timestamp(6)
+  deleted_at          DateTime?      @db.Timestamp(6)
+  version             Int            @default(1)
+  conversacion        conversaciones @relation(fields: [conversacion_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([conversacion_id], map: "idx_mensajes_conversacion")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model alertas {
+  id                       String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  embarazo_id              String                @db.Uuid
+  autoevaluacion_id        String?               @db.Uuid
+  control_prenatal_id      String?               @db.Uuid
+  cita_id                  String?               @db.Uuid
+  origen                   origen_alerta
+  nivel                    nivel_alerta
+  titulo                   String                @db.VarChar(180)
+  mensaje                  String
+  estado                   estado_alerta         @default(PENDIENTE)
+  fecha_generacion         DateTime              @db.Timestamp(6)
+  fecha_visualizacion      DateTime?             @db.Timestamp(6)
+  fecha_inicio_atencion    DateTime?             @db.Timestamp(6)
+  fecha_atencion           DateTime?             @db.Timestamp(6)
+  atendida_por             String?               @db.Uuid
+  respuesta_personal_salud String?
+  requiere_referencia      Boolean               @default(false)
+  created_at               DateTime              @default(now()) @db.Timestamp(6)
+  updated_at               DateTime              @default(now()) @db.Timestamp(6)
+  deleted_at               DateTime?             @db.Timestamp(6)
+  version                  Int                   @default(1)
+  personal_salud           personal_salud?       @relation(fields: [atendida_por], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  autoevaluaciones         autoevaluaciones?     @relation(fields: [autoevaluacion_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  citas                    citas?                @relation(fields: [cita_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  controles_prenatales     controles_prenatales? @relation(fields: [control_prenatal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  embarazos                embarazos             @relation(fields: [embarazo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  notificaciones           notificaciones[]
+
+  @@index([atendida_por])
+  @@index([autoevaluacion_id])
+  @@index([control_prenatal_id])
+  @@index([embarazo_id])
+  @@index([estado])
+  @@index([fecha_generacion])
+  @@index([nivel])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model asignaciones_gestante {
+  id                       String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gestante_id              String            @db.Uuid
+  personal_salud_id        String            @db.Uuid
+  embarazo_id              String?           @db.Uuid
+  fecha_inicio             DateTime          @db.Date
+  fecha_fin                DateTime?         @db.Date
+  estado                   estado_asignacion @default(ACTIVA)
+  es_responsable_principal Boolean           @default(false)
+  observaciones            String?
+  created_at               DateTime          @default(now()) @db.Timestamp(6)
+  updated_at               DateTime          @default(now()) @db.Timestamp(6)
+  deleted_at               DateTime?         @db.Timestamp(6)
+  version                  Int               @default(1)
+  embarazos                embarazos?        @relation(fields: [embarazo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  gestantes                gestantes         @relation(fields: [gestante_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  personal_salud           personal_salud    @relation(fields: [personal_salud_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([embarazo_id])
+  @@index([estado])
+  @@index([gestante_id])
+  @@index([gestante_id, personal_salud_id, embarazo_id])
+  @@index([personal_salud_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model auditoria {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  perfil_id        String?   @db.Uuid
+  tabla_afectada   String    @db.VarChar(100)
+  registro_id      String?   @db.Uuid
+  accion           String    @db.VarChar(20)
+  datos_anteriores Json?     @db.Json
+  datos_nuevos     Json?     @db.Json
+  direccion_ip     String?   @db.VarChar(50)
+  dispositivo      String?   @db.VarChar(200)
+  fecha_evento     DateTime  @db.Timestamp(6)
+  perfiles         perfiles? @relation(fields: [perfil_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([accion])
+  @@index([fecha_evento])
+  @@index([perfil_id])
+  @@index([registro_id])
+  @@index([tabla_afectada])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model autoevaluaciones {
+  id                             String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  embarazo_id                    String                      @db.Uuid
+  fecha_autoevaluacion           DateTime                    @db.Timestamp(6)
+  semanas_gestacion              Int?
+  nivel_resultado                nivel_alerta                @default(INFORMATIVA)
+  presenta_signos_alarma         Boolean                     @default(false)
+  recomendacion                  String?
+  requiere_atencion              Boolean                     @default(false)
+  centro_salud_contactado        Boolean                     @default(false)
+  contacto_emergencia_contactado Boolean                     @default(false)
+  ubicacion_latitud              Decimal?                    @db.Decimal(10, 7)
+  ubicacion_longitud             Decimal?                    @db.Decimal(10, 7)
+  observaciones                  String?
+  created_at                     DateTime                    @default(now()) @db.Timestamp(6)
+  updated_at                     DateTime                    @default(now()) @db.Timestamp(6)
+  deleted_at                     DateTime?                   @db.Timestamp(6)
+  version                        Int                         @default(1)
+  alertas                        alertas[]
+  embarazos                      embarazos                   @relation(fields: [embarazo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  respuestas_autoevaluacion      respuestas_autoevaluacion[]
+
+  @@index([embarazo_id])
+  @@index([fecha_autoevaluacion])
+  @@index([nivel_resultado])
+  @@index([presenta_signos_alarma])
+  @@index([requiere_atencion])
+}
+
+model catalogo_examenes {
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre              String                @unique @db.VarChar(150)
+  descripcion         String?
+  unidad_medida       String?               @db.VarChar(30)
+  activo              Boolean               @default(true)
+  resultados_examenes resultados_examenes[]
+}
+
+model catalogo_factores_riesgo {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre                   String                     @unique @db.VarChar(150)
+  descripcion              String?
+  nivel                    nivel_riesgo
+  activo                   Boolean                    @default(true)
+  embarazo_factores_riesgo embarazo_factores_riesgo[]
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model citas {
+  id                      String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  embarazo_id             String                 @db.Uuid
+  establecimiento_id      String                 @db.Uuid
+  personal_salud_id       String?                @db.Uuid
+  tipo                    tipo_cita              @default(CONTROL_PRENATAL)
+  fecha_programada        DateTime               @db.Timestamp(6)
+  duracion_minutos        Int?                   @default(30)
+  motivo                  String?                @db.VarChar(200)
+  estado                  estado_cita            @default(PROGRAMADA)
+  fecha_confirmacion      DateTime?              @db.Timestamp(6)
+  fecha_realizacion       DateTime?              @db.Timestamp(6)
+  motivo_cancelacion      String?
+  observaciones           String?
+  recordatorio_programado Boolean                @default(false)
+  recordatorio_fecha      DateTime?              @db.Timestamp(6)
+  created_by              String?                @db.Uuid
+  created_at              DateTime               @default(now()) @db.Timestamp(6)
+  updated_at              DateTime               @default(now()) @db.Timestamp(6)
+  deleted_at              DateTime?              @db.Timestamp(6)
+  version                 Int                    @default(1)
+  alertas                 alertas[]
+  perfiles                perfiles?              @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  embarazos               embarazos              @relation(fields: [embarazo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  establecimientos_salud  establecimientos_salud @relation(fields: [establecimiento_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  personal_salud          personal_salud?        @relation(fields: [personal_salud_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  controles_prenatales    controles_prenatales[]
+  notificaciones          notificaciones[]
+
+  @@index([embarazo_id, fecha_programada])
+  @@index([embarazo_id])
+  @@index([establecimiento_id])
+  @@index([estado])
+  @@index([fecha_programada])
+  @@index([personal_salud_id])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model comunidades {
+  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  distrito_id              String                   @db.Uuid
+  nombre                   String                   @db.VarChar(150)
+  descripcion              String?
+  latitud                  Decimal?                 @db.Decimal(10, 7)
+  longitud                 Decimal?                 @db.Decimal(10, 7)
+  altitud_msnm             Int?
+  tiene_cobertura_internet Boolean?                 @default(false)
+  tiene_cobertura_celular  Boolean?                 @default(false)
+  activo                   Boolean                  @default(true)
+  created_at               DateTime                 @default(now()) @db.Timestamp(6)
+  updated_at               DateTime                 @default(now()) @db.Timestamp(6)
+  distritos                distritos                @relation(fields: [distrito_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  establecimientos_salud   establecimientos_salud[]
+  gestantes                gestantes[]
+
+  @@index([distrito_id])
+  @@index([nombre])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model conflictos_sincronizacion {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dispositivo_id   String?       @db.Uuid
+  tabla_nombre     String        @db.VarChar(100)
+  registro_id      String        @db.Uuid
+  version_local    Int?
+  version_servidor Int?
+  datos_locales    Json?         @db.Json
+  datos_servidor   Json?         @db.Json
+  resuelto         Boolean       @default(false)
+  resolucion       String?       @db.VarChar(50)
+  resuelto_por     String?       @db.Uuid
+  fecha_deteccion  DateTime      @db.Timestamp(6)
+  fecha_resolucion DateTime?     @db.Timestamp(6)
+  dispositivos     dispositivos? @relation(fields: [dispositivo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  perfiles         perfiles?     @relation(fields: [resuelto_por], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([dispositivo_id])
+  @@index([registro_id])
+  @@index([resuelto])
+  @@index([tabla_nombre])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model consejos {
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  titulo_es             String                  @db.VarChar(180)
+  contenido_es          String
+  titulo_qu             String?                 @db.VarChar(180)
+  contenido_qu          String?
+  categoria             categoria_consejo
+  semana_inicio         Int                     @default(1)
+  semana_fin            Int                     @default(40)
+  imagen_url            String?
+  prioridad             Int                     @default(1)
+  destacado             Boolean                 @default(false)
+  activo                Boolean                 @default(true)
+  creado_por            String?                 @db.Uuid
+  created_at            DateTime                @default(now()) @db.Timestamp(6)
+  updated_at            DateTime                @default(now()) @db.Timestamp(6)
+  deleted_at            DateTime?               @db.Timestamp(6)
+  version               Int                     @default(1)
+  imagen_base64         String?
+  perfiles              perfiles?               @relation(fields: [creado_por], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  consejos_visualizados consejos_visualizados[]
+  notificaciones        notificaciones[]
+
+  @@index([activo])
+  @@index([categoria])
+  @@index([destacado])
+  @@index([semana_fin])
+  @@index([semana_inicio])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model consejos_visualizados {
+  id                  String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  consejo_id          String     @db.Uuid
+  gestante_id         String     @db.Uuid
+  embarazo_id         String?    @db.Uuid
+  fecha_visualizacion DateTime   @db.Timestamp(6)
+  marcado_util        Boolean?
+  marcado_guardado    Boolean    @default(false)
+  created_at          DateTime   @default(now()) @db.Timestamp(6)
+  consejos            consejos   @relation(fields: [consejo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  embarazos           embarazos? @relation(fields: [embarazo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  gestantes           gestantes  @relation(fields: [gestante_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([consejo_id, gestante_id, embarazo_id])
+  @@index([consejo_id])
+  @@index([embarazo_id])
+  @@index([gestante_id])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model contactos_emergencia {
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gestante_id           String        @db.Uuid
+  nombres               String        @db.VarChar(120)
+  apellidos             String?       @db.VarChar(120)
+  parentesco            String?       @db.VarChar(60)
+  tipo_contacto         tipo_contacto @default(FAMILIAR)
+  telefono_principal    String        @db.VarChar(20)
+  telefono_secundario   String?       @db.VarChar(20)
+  direccion             String?
+  es_contacto_principal Boolean       @default(false)
+  puede_recibir_sms     Boolean       @default(true)
+  activo                Boolean       @default(true)
+  created_at            DateTime      @default(now()) @db.Timestamp(6)
+  updated_at            DateTime      @default(now()) @db.Timestamp(6)
+  deleted_at            DateTime?     @db.Timestamp(6)
+  version               Int           @default(1)
+  gestantes             gestantes     @relation(fields: [gestante_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  eventos_sos           eventos_sos[]
+
+  @@index([es_contacto_principal])
+  @@index([gestante_id])
+  @@index([telefono_principal])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model controles_prenatales {
+  id                          String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  embarazo_id                 String                 @db.Uuid
+  cita_id                     String?                @db.Uuid
+  personal_salud_id           String?                @db.Uuid
+  establecimiento_id          String                 @db.Uuid
+  numero_control              Int
+  fecha_control               DateTime               @db.Timestamp(6)
+  semanas_gestacion           Int
+  dias_gestacion              Int?                   @default(0)
+  peso_kg                     Decimal?               @db.Decimal(5, 2)
+  talla_cm                    Decimal?               @db.Decimal(5, 2)
+  imc                         Decimal?               @db.Decimal(5, 2)
+  presion_sistolica           Int?
+  presion_diastolica          Int?
+  temperatura_c               Decimal?               @db.Decimal(4, 2)
+  frecuencia_cardiaca_materna Int?
+  frecuencia_respiratoria     Int?
+  altura_uterina_cm           Decimal?               @db.Decimal(5, 2)
+  frecuencia_cardiaca_fetal   Int?
+  movimientos_fetales         Boolean?
+  presentacion_fetal          String?                @db.VarChar(50)
+  edema                       Boolean?               @default(false)
+  proteinuria                 String?                @db.VarChar(50)
+  hemoglobina                 Decimal?               @db.Decimal(4, 2)
+  nivel_riesgo                nivel_riesgo           @default(BAJO)
+  requiere_referencia         Boolean                @default(false)
+  establecimiento_referencia  String?                @db.VarChar(150)
+  diagnostico_orientativo     String?
+  recomendaciones             String?
+  observaciones               String?
+  estado                      estado_control         @default(REALIZADO)
+  created_at                  DateTime               @default(now()) @db.Timestamp(6)
+  updated_at                  DateTime               @default(now()) @db.Timestamp(6)
+  deleted_at                  DateTime?              @db.Timestamp(6)
+  version                     Int                    @default(1)
+  alertas                     alertas[]
+  citas                       citas?                 @relation(fields: [cita_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  embarazos                   embarazos              @relation(fields: [embarazo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  establecimientos_salud      establecimientos_salud @relation(fields: [establecimiento_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  personal_salud              personal_salud?        @relation(fields: [personal_salud_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  resultados_examenes         resultados_examenes[]
+
+  @@unique([embarazo_id, numero_control], map: "controles_prenatales_embarazo_id_numero_control_idx")
+  @@index([cita_id])
+  @@index([embarazo_id])
+  @@index([establecimiento_id])
+  @@index([fecha_control])
+  @@index([nivel_riesgo])
+  @@index([personal_salud_id])
+}
+
+model departamentos {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  codigo_ubigeo String       @unique @db.VarChar(2)
+  nombre        String       @db.VarChar(100)
+  activo        Boolean      @default(true)
+  provincias    provincias[]
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model dispositivos {
+  id                        String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  perfil_id                 String                      @db.Uuid
+  identificador_dispositivo String                      @unique(map: "dispositivos_identificador_dispositivo_idx") @db.VarChar(200)
+  plataforma                String                      @default("ANDROID") @db.VarChar(20)
+  modelo                    String?                     @db.VarChar(100)
+  version_sistema           String?                     @db.VarChar(30)
+  version_aplicacion        String?                     @db.VarChar(30)
+  token_notificacion        String?
+  ultimo_acceso             DateTime?                   @db.Timestamp(6)
+  ultima_sincronizacion     DateTime?                   @db.Timestamp(6)
+  activo                    Boolean                     @default(true)
+  created_at                DateTime                    @default(now()) @db.Timestamp(6)
+  updated_at                DateTime                    @default(now()) @db.Timestamp(6)
+  conflictos_sincronizacion conflictos_sincronizacion[]
+  perfiles                  perfiles                    @relation(fields: [perfil_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sync_queue                sync_queue[]
+
+  @@index([activo])
+  @@index([perfil_id])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model distritos {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provincia_id  String        @db.Uuid
+  codigo_ubigeo String        @unique @db.VarChar(6)
+  nombre        String        @db.VarChar(100)
+  activo        Boolean       @default(true)
+  comunidades   comunidades[]
+  provincias    provincias    @relation(fields: [provincia_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([provincia_id])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model embarazo_factores_riesgo {
+  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  embarazo_id              String                   @db.Uuid
+  factor_riesgo_id         String                   @db.Uuid
+  detalle                  String?
+  detectado_por            String?                  @db.Uuid
+  fecha_deteccion          DateTime                 @db.Date
+  activo                   Boolean                  @default(true)
+  created_at               DateTime                 @default(now()) @db.Timestamp(6)
+  updated_at               DateTime                 @default(now()) @db.Timestamp(6)
+  perfiles                 perfiles?                @relation(fields: [detectado_por], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  embarazos                embarazos                @relation(fields: [embarazo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  catalogo_factores_riesgo catalogo_factores_riesgo @relation(fields: [factor_riesgo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([embarazo_id, factor_riesgo_id], map: "embarazo_factores_riesgo_embarazo_id_factor_riesgo_id_idx")
+  @@index([embarazo_id])
+  @@index([factor_riesgo_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model embarazos {
+  id                               String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gestante_id                      String                     @db.Uuid
+  establecimiento_id               String?                    @db.Uuid
+  fecha_ultima_menstruacion        DateTime                   @db.Date
+  fecha_probable_parto             DateTime                   @db.Date
+  fecha_probable_parto_ecografia   DateTime?                  @db.Date
+  edad_gestacional_inicial_semanas Int?
+  fecha_inicio_seguimiento         DateTime                   @db.Date
+  numero_embarazo                  Int                        @default(1)
+  embarazo_multiple                Boolean                    @default(false)
+  cantidad_fetos                   Int                        @default(1)
+  nivel_riesgo                     nivel_riesgo               @default(BAJO)
+  motivo_riesgo                    String?
+  estado                           estado_embarazo            @default(ACTIVO)
+  fecha_finalizacion               DateTime?                  @db.Date
+  tipo_finalizacion                String?                    @db.VarChar(50)
+  observaciones                    String?
+  created_at                       DateTime                   @default(now()) @db.Timestamp(6)
+  updated_at                       DateTime                   @default(now()) @db.Timestamp(6)
+  deleted_at                       DateTime?                  @db.Timestamp(6)
+  version                          Int                        @default(1)
+  alertas                          alertas[]
+  asignaciones_gestante            asignaciones_gestante[]
+  autoevaluaciones                 autoevaluaciones[]
+  citas                            citas[]
+  consejos_visualizados            consejos_visualizados[]
+  controles_prenatales             controles_prenatales[]
+  embarazo_factores_riesgo         embarazo_factores_riesgo[]
+  establecimientos_salud           establecimientos_salud?    @relation(fields: [establecimiento_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  gestantes                        gestantes                  @relation(fields: [gestante_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  eventos_sos                      eventos_sos[]
+  resultados_examenes              resultados_examenes[]
+  vacunas_gestante                 vacunas_gestante[]
+
+  @@index([establecimiento_id])
+  @@index([estado])
+  @@index([fecha_probable_parto])
+  @@index([gestante_id])
+  @@index([nivel_riesgo])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model establecimientos_salud {
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  comunidad_id         String?                @db.Uuid
+  codigo_renipress     String?                @unique @db.VarChar(30)
+  nombre               String                 @db.VarChar(150)
+  tipo                 tipo_establecimiento
+  categoria            String?                @db.VarChar(20)
+  direccion            String?
+  referencia_ubicacion String?
+  telefono             String?                @db.VarChar(20)
+  telefono_emergencia  String?                @db.VarChar(20)
+  numero_sms           String?                @db.VarChar(20)
+  correo               String?                @db.VarChar(150)
+  latitud              Decimal?               @db.Decimal(10, 7)
+  longitud             Decimal?               @db.Decimal(10, 7)
+  horario_atencion     String?                @db.VarChar(150)
+  atiende_emergencias  Boolean                @default(false)
+  activo               Boolean                @default(true)
+  created_at           DateTime               @default(now()) @db.Timestamp(6)
+  updated_at           DateTime               @default(now()) @db.Timestamp(6)
+  deleted_at           DateTime?              @db.Timestamp(6)
+  version              Int                    @default(1)
+  citas                citas[]
+  controles_prenatales controles_prenatales[]
+  embarazos            embarazos[]
+  comunidades          comunidades?           @relation(fields: [comunidad_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  eventos_sos          eventos_sos[]
+  gestantes            gestantes[]
+  personal_salud       personal_salud[]
+  vacunas_gestante     vacunas_gestante[]
+
+  @@index([activo])
+  @@index([comunidad_id])
+  @@index([nombre])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model eventos_sos {
+  id                      String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gestante_id             String                  @db.Uuid
+  embarazo_id             String?                 @db.Uuid
+  establecimiento_id      String?                 @db.Uuid
+  contacto_emergencia_id  String?                 @db.Uuid
+  tipo_accion             String                  @db.VarChar(30)
+  telefono_destino        String?                 @db.VarChar(20)
+  mensaje                 String?
+  latitud                 Decimal?                @db.Decimal(10, 7)
+  longitud                Decimal?                @db.Decimal(10, 7)
+  tenia_conexion_internet Boolean                 @default(false)
+  tenia_cobertura_celular Boolean?
+  accion_completada       Boolean                 @default(false)
+  fecha_evento            DateTime                @db.Timestamp(6)
+  created_at              DateTime                @default(now()) @db.Timestamp(6)
+  contactos_emergencia    contactos_emergencia?   @relation(fields: [contacto_emergencia_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  embarazos               embarazos?              @relation(fields: [embarazo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  establecimientos_salud  establecimientos_salud? @relation(fields: [establecimiento_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  gestantes               gestantes               @relation(fields: [gestante_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([embarazo_id])
+  @@index([fecha_evento])
+  @@index([gestante_id])
+  @@index([tipo_accion])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model notificaciones {
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  perfil_id          String              @db.Uuid
+  cita_id            String?             @db.Uuid
+  vacuna_gestante_id String?             @db.Uuid
+  alerta_id          String?             @db.Uuid
+  consejo_id         String?             @db.Uuid
+  tipo               tipo_notificacion
+  canal              canal_notificacion  @default(LOCAL)
+  titulo             String              @db.VarChar(180)
+  mensaje            String
+  fecha_programada   DateTime?           @db.Timestamp(6)
+  fecha_envio        DateTime?           @db.Timestamp(6)
+  fecha_lectura      DateTime?           @db.Timestamp(6)
+  estado             estado_notificacion @default(PENDIENTE)
+  intentos           Int                 @default(0)
+  error_detalle      String?
+  created_at         DateTime            @default(now()) @db.Timestamp(6)
+  updated_at         DateTime            @default(now()) @db.Timestamp(6)
+  alertas            alertas?            @relation(fields: [alerta_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  citas              citas?              @relation(fields: [cita_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  consejos           consejos?           @relation(fields: [consejo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  perfiles           perfiles            @relation(fields: [perfil_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vacunas_gestante   vacunas_gestante?   @relation(fields: [vacuna_gestante_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([estado])
+  @@index([fecha_programada])
+  @@index([perfil_id])
+  @@index([tipo])
+}
+
+model preguntas_autoevaluacion {
+  id                        String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  codigo                    String                      @unique @db.VarChar(50)
+  pregunta_es               String
+  pregunta_qu               String?
+  descripcion_es            String?
+  descripcion_qu            String?
+  nivel_si                  nivel_alerta
+  orden                     Int
+  activo                    Boolean                     @default(true)
+  created_at                DateTime                    @default(now()) @db.Timestamp(6)
+  updated_at                DateTime                    @default(now()) @db.Timestamp(6)
+  respuestas_autoevaluacion respuestas_autoevaluacion[]
+
+  @@index([activo])
+  @@index([orden])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model provincias {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  departamento_id String        @db.Uuid
+  codigo_ubigeo   String        @unique @db.VarChar(4)
+  nombre          String        @db.VarChar(100)
+  activo          Boolean       @default(true)
+  distritos       distritos[]
+  departamentos   departamentos @relation(fields: [departamento_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([departamento_id])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model respuestas_autoevaluacion {
+  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  autoevaluacion_id        String                   @db.Uuid
+  pregunta_id              String                   @db.Uuid
+  respuesta_boolean        Boolean
+  detalle                  String?
+  nivel_generado           nivel_alerta?
+  created_at               DateTime                 @default(now()) @db.Timestamp(6)
+  autoevaluaciones         autoevaluaciones         @relation(fields: [autoevaluacion_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  preguntas_autoevaluacion preguntas_autoevaluacion @relation(fields: [pregunta_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([autoevaluacion_id, pregunta_id], map: "respuestas_autoevaluacion_autoevaluacion_id_pregunta_id_idx")
+  @@index([autoevaluacion_id])
+  @@index([pregunta_id])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model resultados_examenes {
+  id                   String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  embarazo_id          String                @db.Uuid
+  control_prenatal_id  String?               @db.Uuid
+  examen_id            String                @db.Uuid
+  fecha_examen         DateTime              @db.Date
+  resultado            String?               @db.VarChar(200)
+  valor_numerico       Decimal?              @db.Decimal(10, 2)
+  unidad_medida        String?               @db.VarChar(30)
+  valor_referencia     String?               @db.VarChar(100)
+  es_anormal           Boolean               @default(false)
+  observaciones        String?
+  archivo_url          String?
+  registrado_por       String?               @db.Uuid
+  created_at           DateTime              @default(now()) @db.Timestamp(6)
+  updated_at           DateTime              @default(now()) @db.Timestamp(6)
+  deleted_at           DateTime?             @db.Timestamp(6)
+  version              Int                   @default(1)
+  controles_prenatales controles_prenatales? @relation(fields: [control_prenatal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  embarazos            embarazos             @relation(fields: [embarazo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  catalogo_examenes    catalogo_examenes     @relation(fields: [examen_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  perfiles             perfiles?             @relation(fields: [registrado_por], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([control_prenatal_id])
+  @@index([embarazo_id])
+  @@index([es_anormal])
+  @@index([examen_id])
+  @@index([fecha_examen])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model sync_queue {
+  id                   String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dispositivo_id       String?               @db.Uuid
+  perfil_id            String?               @db.Uuid
+  tabla_nombre         String                @db.VarChar(100)
+  registro_id          String                @db.Uuid
+  operacion            tipo_operacion_sync
+  payload              Json                  @db.Json
+  estado               estado_sincronizacion @default(PENDIENTE)
+  intentos             Int                   @default(0)
+  ultimo_error         String?
+  fecha_ultimo_intento DateTime?             @db.Timestamp(6)
+  fecha_sincronizacion DateTime?             @db.Timestamp(6)
+  created_at           DateTime              @default(now()) @db.Timestamp(6)
+  updated_at           DateTime              @default(now()) @db.Timestamp(6)
+  dispositivos         dispositivos?         @relation(fields: [dispositivo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  perfiles             perfiles?             @relation(fields: [perfil_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([created_at])
+  @@index([dispositivo_id])
+  @@index([estado])
+  @@index([perfil_id])
+  @@index([registro_id])
+  @@index([tabla_nombre])
+}
+
+model vacunas {
+  id                       String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre                   String             @unique @db.VarChar(120)
+  descripcion              String?
+  numero_dosis             Int                @default(1)
+  intervalo_dias           Int?
+  recomendada_desde_semana Int?
+  recomendada_hasta_semana Int?
+  activa                   Boolean            @default(true)
+  created_at               DateTime           @default(now()) @db.Timestamp(6)
+  updated_at               DateTime           @default(now()) @db.Timestamp(6)
+  vacunas_gestante         vacunas_gestante[]
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model vacunas_gestante {
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  embarazo_id            String                  @db.Uuid
+  vacuna_id              String?                 @db.Uuid
+  personal_salud_id      String?                 @db.Uuid
+  establecimiento_id     String?                 @db.Uuid
+  numero_dosis           Int                     @default(1)
+  fecha_programada       DateTime?               @db.Date
+  fecha_aplicacion       DateTime?               @db.Date
+  estado                 estado_vacuna           @default(PENDIENTE)
+  lote                   String?                 @db.VarChar(50)
+  fabricante             String?                 @db.VarChar(100)
+  observaciones          String?
+  nombre_vacuna          String?                 @db.VarChar(120)
+  descripcion_vacuna     String?
+  created_at             DateTime                @default(now()) @db.Timestamp(6)
+  updated_at             DateTime                @default(now()) @db.Timestamp(6)
+  deleted_at             DateTime?               @db.Timestamp(6)
+  version                Int                     @default(1)
+  notificaciones         notificaciones[]
+  embarazos              embarazos               @relation(fields: [embarazo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  establecimientos_salud establecimientos_salud? @relation(fields: [establecimiento_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  personal_salud         personal_salud?         @relation(fields: [personal_salud_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vacunas                vacunas?                @relation(fields: [vacuna_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([embarazo_id])
+  @@index([estado])
+  @@index([fecha_programada])
+  @@index([personal_salud_id])
+  @@index([vacuna_id])
+}
+
+enum canal_notificacion {
+  LOCAL
+  PUSH
+  SMS
+}
+
+enum categoria_consejo {
+  ALIMENTACION
+  HIGIENE
+  CONTROLES_PRENATALES
+  SIGNOS_ALARMA
+  PREPARACION_PARTO
+  CUIDADOS_EMBARAZO
+  ACTIVIDAD_FISICA
+  SALUD_EMOCIONAL
+}
+
+enum estado_alerta {
+  PENDIENTE
+  VISUALIZADA
+  EN_ATENCION
+  ATENDIDA
+  DESCARTADA
+}
+
+enum estado_asignacion {
+  ACTIVA
+  FINALIZADA
+  CANCELADA
+}
+
+enum estado_cita {
+  PROGRAMADA
+  CONFIRMADA
+  REALIZADA
+  CANCELADA
+  AUSENTE
+  REPROGRAMADA
+}
+
+enum estado_control {
+  PROGRAMADO
+  REALIZADO
+  CANCELADO
+}
+
+enum estado_embarazo {
+  ACTIVO
+  FINALIZADO
+  INTERRUMPIDO
+}
+
+enum estado_notificacion {
+  PENDIENTE
+  ENVIADA
+  LEIDA
+  ERROR
+}
+
+enum estado_sincronizacion {
+  PENDIENTE
+  SINCRONIZANDO
+  SINCRONIZADO
+  ERROR
+}
+
+enum estado_usuario {
+  ACTIVO
+  INACTIVO
+  BLOQUEADO
+}
+
+enum estado_vacuna {
+  PENDIENTE
+  APLICADA
+  ATRASADA
+  CANCELADA
+}
+
+enum idioma_usuario {
+  ESPANOL
+  QUECHUA
+}
+
+enum nivel_alerta {
+  INFORMATIVA
+  PREVENTIVA
+  URGENTE
+  CRITICA
+}
+
+enum nivel_riesgo {
+  BAJO
+  MEDIO
+  ALTO
+  CRITICO
+}
+
+enum origen_alerta {
+  AUTOEVALUACION
+  CONTROL_PRENATAL
+  CITA_VENCIDA
+  SISTEMA
+  PERSONAL_SALUD
+}
+
+enum rol_usuario {
+  GESTANTE
+  PERSONAL_SALUD
+  ADMINISTRADOR
+}
+
+enum sexo_usuario {
+  FEMENINO
+  MASCULINO
+  OTRO
+  NO_ESPECIFICA
+}
+
+enum tipo_cita {
+  CONTROL_PRENATAL
+  VACUNACION
+  ECOGRAFIA
+  EXAMEN
+  ORIENTACION
+  OTRO
+}
+
+enum tipo_contacto {
+  FAMILIAR
+  PAREJA
+  AMIGO
+  PROMOTOR_SALUD
+  OTRO
+}
+
+enum tipo_documento {
+  DNI
+  CARNET_EXTRANJERIA
+  PASAPORTE
+  OTRO
+}
+
+enum tipo_establecimiento {
+  PUESTO_SALUD
+  CENTRO_SALUD
+  HOSPITAL
+  CLINICA
+  OTRO
+}
+
+enum tipo_notificacion {
+  CITA
+  VACUNA
+  CONSEJO
+  ALERTA
+  SISTEMA
+}
+
+enum tipo_operacion_sync {
+  CREAR
+  ACTUALIZAR
+  ELIMINAR
+}
+
+enum tipo_personal_salud {
+  OBSTETRA
+  MEDICO
+  ENFERMERO
+  TECNICO
+  PROMOTOR_SALUD
+  OTRO
+}

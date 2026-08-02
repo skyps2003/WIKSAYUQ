@@ -12,6 +12,8 @@ import { getItemAsync, setItemAsync, deleteItemAsync } from '../../../src/utils/
 import API_URL from '../../../src/config/api';
 import { DailyTipBanner } from '../../../src/components/DailyTipBanner';
 import { calculateGestationalWeeks, getTrimesterKey } from '../../../src/utils/gestation';
+import { citaRepo } from '../../../src/database/repositories/cita.repository';
+import { fetchWithTimeout, readApiResponse } from '../../../src/utils/fetchWithTimeout';
 
 export default function InicioGestanteScreen() {
   const router = useRouter();
@@ -68,10 +70,11 @@ export default function InicioGestanteScreen() {
       const token = await getItemAsync('userToken');
       const centroSaludId = await getItemAsync('userCentroSaludId');
       const centroSaludNombre = await getItemAsync('userCentroSalud');
-      const res = await fetch(`${API_URL}/citas/proximas`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetchWithTimeout(`${API_URL}/citas/proximas`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        timeout: 15000,
       });
-      const data = await res.json();
+      const data = await readApiResponse<any>(res);
       if (data.success && data.data) {
         const citaDate = new Date(data.data.fecha_programada);
         setNextCitaDate(citaDate);
@@ -90,6 +93,14 @@ export default function InicioGestanteScreen() {
       }
     } catch (e) {
       console.error('Error fetching next cita', e);
+      const [cached] = await citaRepo.getProximas();
+      if (cached) {
+        const citaDate = new Date(cached.fecha_programada);
+        setNextCitaDate(citaDate);
+        setDaysRemaining(Math.max(0, Math.ceil((citaDate.getTime() - Date.now()) / 86400000)));
+        setNextCitaMotivo(cached.motivo || '');
+        setNextCitaEstablecimiento(await getItemAsync('userCentroSalud') || '');
+      }
     }
   };
 

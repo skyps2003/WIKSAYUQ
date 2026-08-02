@@ -4,7 +4,7 @@
   "description": "Backend API for WIKSAYUQ",
   "main": "dist/server.js",
   "engines": {
-    "node": "20.x"
+    "node": ">=20 <23"
   },
   "scripts": {
     "start": "node dist/server.js",
@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "prisma:generate": "prisma generate",
     "prisma:pull": "prisma db pull",
-    "migrate:safe": "ts-node database/migrations/run-safe-migrations.ts"
+    "migrate:safe": "ts-node database/migrations/run-safe-migrations.ts",
+    "deploy:package": "npm run build && npx prisma generate && node scripts/package-deploy.js"
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",
