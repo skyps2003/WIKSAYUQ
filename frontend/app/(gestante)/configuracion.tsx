@@ -111,34 +111,7 @@ export default function ConfiguracionScreen() {
           </TouchableOpacity>
         </Card>
 
-        {/* Notificaciones */}
-        <AppText variant="h3" style={styles.sectionTitle}>
-          {lang === 'qu' ? 'Willakuykuna' : 'NOTIFICACIONES'}
-        </AppText>
-        <Card variant="elevated" style={styles.sectionCard}>
-          <View style={styles.notifRow}>
-            <AppText variant="body2">
-              {lang === 'qu' ? "Kunan p'unchaw yachaykuna" : 'Consejos del día'}
-            </AppText>
-            <Switch
-              value={tipsEnabled}
-              onValueChange={setTipsEnabled}
-              trackColor={{ false: colors.backgroundSoft, true: colors.primary }}
-              thumbColor={colors.surface}
-            />
-          </View>
-          <View style={styles.notifRowLast}>
-            <AppText variant="body2">
-              {lang === 'qu' ? 'Qhawaykuna yuyaychay' : 'Recordatorio de controles'}
-            </AppText>
-            <Switch
-              value={reminderEnabled}
-              onValueChange={setReminderEnabled}
-              trackColor={{ false: colors.backgroundSoft, true: colors.primary }}
-              thumbColor={colors.surface}
-            />
-          </View>
-        </Card>
+
 
         {/* Información */}
         <AppText variant="h3" style={styles.sectionTitle}>
