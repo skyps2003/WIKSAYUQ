@@ -37,6 +37,26 @@ export const WeightChartCard: React.FC<{ refreshKey?: number }> = ({ refreshKey 
           headers: { Authorization: `Bearer ${token}` },
         });
         const json = await res.json();
+        
+        // Cargar controles pendientes (offline)
+        const { getDB } = require('../database');
+        const db = getDB();
+        let pendingControles: PesoRegistro[] = [];
+        
+        if (db) {
+          const pendingRows = db.getAllSync('SELECT data FROM sync_queue WHERE status = "PENDING" AND table_name = "controles"');
+          pendingControles = pendingRows.map((row: any) => {
+            const parsed = JSON.parse(row.data);
+            return {
+              peso_kg: parseFloat(parsed.peso_kg),
+              semana_gestacion: 0,
+              fecha_control: parsed.fecha_control
+            };
+          }).filter((c: PesoRegistro) => Number.isFinite(c.peso_kg));
+        }
+
+        let combinedData: PesoRegistro[] = [...pendingControles];
+
         if (json.success && Array.isArray(json.data)) {
           const conPeso = json.data
             .filter((c: any) => c.peso_kg)
@@ -45,13 +65,22 @@ export const WeightChartCard: React.FC<{ refreshKey?: number }> = ({ refreshKey 
               semana_gestacion: c.semanas_gestacion || 0,
               fecha_control: c.fecha_control,
             }))
-            .filter((c: PesoRegistro) => Number.isFinite(c.peso_kg) && c.peso_kg >= 30 && c.peso_kg <= 200)
-            .sort((a: PesoRegistro, b: PesoRegistro) => new Date(a.fecha_control).getTime() - new Date(b.fecha_control).getTime());
+            .filter((c: PesoRegistro) => Number.isFinite(c.peso_kg) && c.peso_kg >= 30 && c.peso_kg <= 200);
+            
+          combinedData = [...combinedData, ...conPeso];
+        }
+        
+        // Remove duplicates by date
+        const uniqueData = Array.from(new Map(
+          combinedData.map(item => [item.fecha_control.split('T')[0], item])
+        ).values());
 
-          setData(conPeso);
-          if (conPeso.length > 0) {
-            setLastPeso(conPeso[conPeso.length - 1].peso_kg);
-          }
+        const sortedData = uniqueData
+          .sort((a: PesoRegistro, b: PesoRegistro) => new Date(a.fecha_control).getTime() - new Date(b.fecha_control).getTime());
+
+        setData(sortedData);
+        if (sortedData.length > 0) {
+          setLastPeso(sortedData[sortedData.length - 1].peso_kg);
         }
       } catch (e) {
         console.error('Error fetching peso data', e);
