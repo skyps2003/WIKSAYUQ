@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useAccessibilityStore, FontSizeLevel } from '../../src/store/accessibility-store';
 import { getItemAsync, setItemAsync, deleteItemAsync } from '../../src/utils/webStorage';
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import Constants from 'expo-constants';
 
 const FONT_SIZES: { key: FontSizeLevel; label: string; quLabel: string }[] = [
@@ -37,6 +38,18 @@ export default function ConfiguracionScreen() {
   };
 
   const lang = i18n.language === 'qu' ? 'qu' : 'es';
+
+  const handleSupport = async () => {
+    const name = await getItemAsync('userFullName') || 'Usuario';
+    const text = `Hola, soy ${name} de la app WIKSAYUQ. Necesito soporte con: `;
+    // TODO: El usuario debe configurar su propio número de teléfono de soporte
+    const phone = '+51999999999'; 
+    const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(text)}`;
+    
+    Linking.openURL(url).catch(() => {
+      Linking.openURL(`https://wa.me/${phone.replace('+', '')}?text=${encodeURIComponent(text)}`);
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -130,7 +143,7 @@ export default function ConfiguracionScreen() {
 
         {/* Información */}
         <AppText variant="h3" style={styles.sectionTitle}>
-          {lang === 'qu' ? 'Willakuy' : 'INFORMACIÓN'}
+          {lang === 'qu' ? 'Willakuy' : 'SOPORTE E INFORMACIÓN'}
         </AppText>
         <Card variant="elevated" style={styles.sectionCard}>
           <View style={styles.infoRow}>
@@ -139,13 +152,25 @@ export default function ConfiguracionScreen() {
             </AppText>
             <AppText variant="body2">{Constants.expoConfig?.version || '1.0.0'}</AppText>
           </View>
-          <TouchableOpacity style={styles.infoRow} activeOpacity={0.6} onPress={() => WebBrowser.openBrowserAsync('https://wiksayuq.app/terminos')}>
+          
+          <TouchableOpacity style={styles.infoRow} activeOpacity={0.6} onPress={handleSupport}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <MaterialCommunityIcons name="whatsapp" size={22} color="#25D366" />
+              <AppText variant="body2" style={{ fontWeight: '600' }}>
+                {lang === 'qu' ? 'Yanapay' : 'Soporte Técnico'}
+              </AppText>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.border} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.infoRow} activeOpacity={0.6} onPress={handleSupport}>
             <AppText variant="body2" color={colors.textSecondary}>
               {lang === 'qu' ? 'Kamachikuykuna' : 'Términos y condiciones'}
             </AppText>
             <MaterialCommunityIcons name="chevron-right" size={20} color={colors.border} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.infoRowLast} activeOpacity={0.6} onPress={() => WebBrowser.openBrowserAsync('https://wiksayuq.app/privacidad')}>
+
+          <TouchableOpacity style={styles.infoRowLast} activeOpacity={0.6} onPress={handleSupport}>
             <AppText variant="body2" color={colors.textSecondary}>
               {lang === 'qu' ? 'Pakay willakuy' : 'Política de privacidad'}
             </AppText>

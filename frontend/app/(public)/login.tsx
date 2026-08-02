@@ -99,6 +99,14 @@ export default function LoginScreen() {
           await setItemAsync('userPhoto', user.foto_base64);
         }
 
+        if (user.fecha_nacimiento) {
+          const birthDate = new Date(user.fecha_nacimiento);
+          const ageDifMs = Date.now() - birthDate.getTime();
+          const ageDate = new Date(ageDifMs);
+          const calculatedAge = Math.abs(ageDate.getUTCFullYear() - 1970);
+          await setItemAsync('userAge', calculatedAge.toString());
+        }
+
         if (user.fum) {
           await setItemAsync('userFum', user.fum);
           const weeks = calculateGestationalWeeks(user.fum);

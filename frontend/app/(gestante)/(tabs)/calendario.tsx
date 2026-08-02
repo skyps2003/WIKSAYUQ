@@ -116,7 +116,8 @@ export default function CalendarioScreen() {
         });
       }
 
-      setEvents(unified);
+      const uniqueUnified = Array.from(new Map(unified.map(item => [item.id, item])).values());
+      setEvents(uniqueUnified);
     } catch (error) {
       console.error(error);
     }

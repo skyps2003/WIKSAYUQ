@@ -192,6 +192,26 @@ export default function ControlesRegistroScreen() {
       showToast({ message: t('controles.error_campos'), type: 'error' });
       return;
     }
+
+    try {
+      // Validate that there is no control already saved for this specific day
+      const allControles = OfflineDataService.getCachedData('controles');
+      const targetDateStr = dateControl.toISOString().split('T')[0]; // YYYY-MM-DD
+      
+      const isDuplicate = allControles.some((c: any) => {
+        if (!c.fecha_control) return false;
+        const controlDateStr = new Date(c.fecha_control).toISOString().split('T')[0];
+        return controlDateStr === targetDateStr;
+      });
+
+      if (isDuplicate) {
+        showToast({ message: 'Ya existe un control registrado para esta fecha', type: 'error' });
+        return;
+      }
+    } catch (e) {
+      console.warn('Error validating duplicate control:', e);
+    }
+
     setLoading(true);
     try {
       const fum = await getItemAsync('userFum');
@@ -324,7 +344,7 @@ export default function ControlesRegistroScreen() {
                 <View style={styles.pickerContainer}>
                   <Picker selectedValue={estControl} onValueChange={(v) => setEstControl(v)}>
                     <Picker.Item label={t('controles.picker_placeholder')} value="" color={colors.textSecondary} />
-                    {establecimientos.map((e, idx) => <Picker.Item key={`ctrl-${idx}`} label={e.nombre} value={e.id} />)}
+                    {establecimientos.map((e, idx) => <Picker.Item key={`ctrl-${idx}`} label={e.nombre} value={e.id} color="#333" />)}
                   </Picker>
                 </View>
               </FormField>
@@ -378,7 +398,7 @@ export default function ControlesRegistroScreen() {
                 <View style={styles.pickerContainer}>
                   <Picker selectedValue={estCita} onValueChange={(v) => setEstCita(v)}>
                     <Picker.Item label={t('controles.picker_placeholder')} value="" color={colors.textSecondary} />
-                    {establecimientos.map((e, idx) => <Picker.Item key={`cita-${idx}`} label={e.nombre} value={e.id} />)}
+                    {establecimientos.map((e, idx) => <Picker.Item key={`cita-${idx}`} label={e.nombre} value={e.id} color="#333" />)}
                   </Picker>
                 </View>
               </FormField>
@@ -427,7 +447,7 @@ export default function ControlesRegistroScreen() {
                 <View style={styles.pickerContainer}>
                   <Picker selectedValue={estVacuna} onValueChange={(v) => setEstVacuna(v)}>
                     <Picker.Item label={t('controles.picker_placeholder')} value="" color={colors.textSecondary} />
-                    {establecimientos.map((e, idx) => <Picker.Item key={`vac-${idx}`} label={e.nombre} value={e.id} />)}
+                    {establecimientos.map((e, idx) => <Picker.Item key={`vac-${idx}`} label={e.nombre} value={e.id} color="#333" />)}
                   </Picker>
                 </View>
               </FormField>

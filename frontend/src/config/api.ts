@@ -1,4 +1,4 @@
-const CLOUD_API_URL = 'https://wiksayuq.rimaqmasi.com/api';
+const CLOUD_API_URL = 'https://wiksayuq-api.onrender.com/api';
 
 // A standalone APK must never fall back to localhost: on a phone that address
 // points to the phone itself. For local development, set EXPO_PUBLIC_API_URL.

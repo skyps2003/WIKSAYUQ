@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { getItemAsync, setItemAsync, deleteItemAsync } from '../../src/utils/webStorage';
 import { useTranslation } from 'react-i18next';
 import API_URL from '../../src/config/api';
+import { fetchWithTimeout } from '../../src/utils/fetchWithTimeout';
 
 export default function MisDatosScreen() {
   const router = useRouter();
@@ -83,27 +84,33 @@ export default function MisDatosScreen() {
     setLoading(true);
     try {
       const token = await getItemAsync('userToken');
-      const response = await fetch(`${API_URL}/auth/change-pin`, {
+      const response = await fetchWithTimeout(`${API_URL}/auth/change-pin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ newPin })
+        body: JSON.stringify({ newPin }),
+        timeout: 25000 // 25s timeout for Render cold start
       });
 
       const result = await response.json();
-      if (result.success) {
+      if (response.ok && result.success) {
         showToast({ message: t('mis_datos.exito'), type: 'success' });
         Keyboard.dismiss();
         setActiveField(null);
+        setNewPin('');
+        setConfirmPin('');
         router.back();
       } else {
         showToast({ message: result.message || t('mis_datos.error_conexion'), type: 'error' });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      showToast({ message: t('mis_datos.error_conexion'), type: 'error' });
+      const msg = error?.message?.includes('Timeout') 
+        ? 'El servidor tardó en responder. Intenta de nuevo.' 
+        : t('mis_datos.error_conexion');
+      showToast({ message: msg, type: 'error' });
     } finally {
       setLoading(false);
     }
