@@ -130,11 +130,23 @@ export const createCita = async (req: Request, res: Response) => {
       estId = defaultEst.id;
     }
 
+    const existing = await prisma.citas.findFirst({
+      where: {
+        embarazo_id: embarazo.id,
+        fecha_programada: fechaCita,
+        motivo: motivo,
+      }
+    });
+
+    if (existing) {
+      return res.status(201).json({ success: true, data: existing });
+    }
+
     const nuevaCita = await prisma.citas.create({
       data: {
         embarazo_id: embarazo.id,
         establecimiento_id: estId,
-        fecha_programada: new Date(fecha_programada),
+        fecha_programada: fechaCita,
         motivo: motivo || 'Control Prenatal',
         observaciones: observaciones || null,
         tipo: tipo || 'CONTROL_PRENATAL',
