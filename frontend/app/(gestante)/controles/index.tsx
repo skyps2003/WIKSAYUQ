@@ -427,7 +427,10 @@ export default function ControlesRegistroScreen() {
                 </View>
                 <Switch
                   value={vacunaEstado === 'PENDIENTE'}
-                  onValueChange={(v) => setVacunaEstado(v ? 'PENDIENTE' : 'APLICADA')}
+                  onValueChange={(v) => {
+                    setVacunaEstado(v ? 'PENDIENTE' : 'APLICADA');
+                    setDateVacuna(new Date());
+                  }}
                   trackColor={{ false: '#DDD', true: colors.roseLight }}
                   thumbColor={vacunaEstado === 'PENDIENTE' ? colors.primary : '#CCC'}
                 />
@@ -477,8 +480,16 @@ export default function ControlesRegistroScreen() {
           new Date()
         }
         mode={showPicker.mode}
-        maximumDate={showPicker.target === 'controlDate' ? new Date() : undefined}
-        minimumDate={showPicker.target === 'citaDate' ? new Date() : undefined}
+        maximumDate={
+          showPicker.target === 'controlDate' ? new Date() :
+          (showPicker.target === 'vacunaDate' && vacunaEstado === 'APLICADA') ? new Date() :
+          undefined
+        }
+        minimumDate={
+          showPicker.target === 'citaDate' ? new Date() :
+          (showPicker.target === 'vacunaDate' && vacunaEstado === 'PENDIENTE') ? new Date() :
+          undefined
+        }
         onConfirm={handleValueChange}
         onCancel={handleDismiss}
       />
