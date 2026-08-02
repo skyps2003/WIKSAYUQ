@@ -173,3 +173,19 @@ export const getCachedData = <T>(cacheKey: string, fallback: T): T => {
     return fallback;
   }
 };
+
+export const clearLocalDatabase = () => {
+  const db = getDB();
+  if (!db) return;
+  const tables = [
+    'sync_queue', 'offline_cache', 'conversaciones', 'mensajes',
+    'controles', 'citas', 'vacunas', 'contactos', 'establecimientos'
+  ];
+  try {
+    for (const t of tables) {
+      db.execSync(`DELETE FROM ${t}`);
+    }
+  } catch (e) {
+    console.error('Error clearing database', e);
+  }
+};

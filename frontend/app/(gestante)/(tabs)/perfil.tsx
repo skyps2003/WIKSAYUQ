@@ -13,6 +13,7 @@ import { spacing, radius } from '../../../src/theme/spacing';
 import { useRouter } from 'expo-router';
 import { getItemAsync, setItemAsync, deleteItemAsync } from '../../../src/utils/webStorage';
 import { useTranslation } from 'react-i18next';
+import { clearLocalDatabase } from '../../../src/database';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from 'expo-router';
 import { calculateGestationalWeeks } from '../../../src/utils/gestation';
@@ -78,6 +79,7 @@ export default function PerfilScreen() {
   const confirmLogout = async () => {
     try {
       await deleteItemAsync('isLoggedIn');
+      clearLocalDatabase();
       router.replace('/(public)/login' as any);
     } catch (e) {
       console.error('Error cerrando sesión', e);
