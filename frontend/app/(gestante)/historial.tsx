@@ -268,6 +268,9 @@ export default function HistorialScreen() {
                 ? `${control.presion_sistolica}/${control.presion_diastolica}` 
                 : '--/--';
                 
+              const isControl = !!control;
+              const title = isControl ? t('historial.control_titulo') : (cita.motivo || 'Cita Médica');
+                
               return (
                 <TouchableOpacity key={cita.id} style={styles.gridCardWrap} activeOpacity={0.75} onPress={() => setSelectedDetail({ type: 'control', item: cita })}>
                   <Card style={styles.gridCard}>
@@ -275,13 +278,19 @@ export default function HistorialScreen() {
                       <MaterialCommunityIcons name="calendar-month" size={18} color={colors.primary} />
                       <AppText variant="body2" style={{ marginLeft: 6, flex: 1, fontWeight: '600' }}>{formatDateLabel(cita.fecha_programada)}</AppText>
                     </View>
-                    <AppText variant="caption" style={{ fontWeight: '500', marginTop: 4 }}>{t('historial.control_titulo')}</AppText>
-                    <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
-                      {t('historial.peso')}: {peso}
-                    </AppText>
-                    <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 1 }}>
-                      {t('historial.pa')}: {pa}
-                    </AppText>
+                    <AppText variant="caption" style={{ fontWeight: '500', marginTop: 4 }}>{title}</AppText>
+                    
+                    {isControl && (
+                      <>
+                        <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
+                          {t('historial.peso')}: {peso}
+                        </AppText>
+                        <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 1 }}>
+                          {t('historial.pa')}: {pa}
+                        </AppText>
+                      </>
+                    )}
+                    
                     <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }} numberOfLines={1}>
                       {getLugar(cita)}
                     </AppText>
