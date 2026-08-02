@@ -42,8 +42,7 @@ export default function ConfiguracionScreen() {
   const handleSupport = async () => {
     const name = await getItemAsync('userFullName') || 'Usuario';
     const text = `Hola, soy ${name} de la app WIKSAYUQ. Necesito soporte con: `;
-    // TODO: El usuario debe configurar su propio número de teléfono de soporte
-    const phone = '+51999999999'; 
+    const phone = '+51925903051'; 
     const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(text)}`;
     
     Linking.openURL(url).catch(() => {

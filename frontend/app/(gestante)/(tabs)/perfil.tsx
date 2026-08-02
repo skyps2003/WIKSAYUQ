@@ -88,14 +88,15 @@ export default function PerfilScreen() {
 
   const handleSupport = async () => {
     const phone = '+51925903051';
-    const message = 'Tengo una consulta con el sistema.';
-    const url = `sms:${phone}?body=${encodeURIComponent(message)}`;
+    const message = 'Hola, soy de la app WIKSAYUQ. Necesito soporte con el sistema.';
+    const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
 
     try {
       await Linking.openURL(url);
     } catch (error) {
-      console.error('Error opening support message', error);
-      Alert.alert('Soporte', 'No se pudo abrir la aplicación de mensajes.');
+      Linking.openURL(`https://wa.me/${phone.replace('+', '')}?text=${encodeURIComponent(message)}`).catch(() => {
+        Alert.alert('Soporte', 'No se pudo abrir WhatsApp.');
+      });
     }
   };
 
