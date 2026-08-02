@@ -111,6 +111,17 @@ export const createControl = async (req: Request, res: Response) => {
       (fechaControl.getTime() - new Date(embarazo.fecha_ultima_menstruacion).getTime()) / (1000 * 60 * 60 * 24 * 7)
     ));
 
+    const existing = await prisma.controles_prenatales.findFirst({
+      where: {
+        embarazo_id: embarazo.id,
+        fecha_control: new Date(fecha_control),
+      }
+    });
+
+    if (existing) {
+      return res.status(201).json({ success: true, data: existing });
+    }
+
     // Create a cita linked to this control for the calendar
     const cita = await prisma.citas.create({
       data: {
@@ -124,17 +135,6 @@ export const createControl = async (req: Request, res: Response) => {
         created_by: user.id
       }
     });
-
-    const existing = await prisma.controles_prenatales.findFirst({
-      where: {
-        embarazo_id: embarazo.id,
-        fecha_control: new Date(fecha_control),
-      }
-    });
-
-    if (existing) {
-      return res.status(201).json({ success: true, data: existing });
-    }
 
     const control = await prisma.controles_prenatales.create({
       data: {
