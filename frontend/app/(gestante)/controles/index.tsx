@@ -456,13 +456,7 @@ export default function ControlesRegistroScreen() {
                 </View>
               </FormField>
 
-              <View style={styles.switchRow}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <MaterialCommunityIcons name="needle" size={18} color={colors.primary} />
-                  <AppText style={styles.switchLabel}>{t('controles.vacuna_label_mas_dosis')}</AppText>
-                </View>
-                <Switch value={hasMoreDosis} onValueChange={setHasMoreDosis} trackColor={{ false: '#DDD', true: colors.roseLight }} thumbColor={hasMoreDosis ? colors.primary : '#CCC'} />
-              </View>
+
             </Card>
 
             <AppButton title={`${t('controles.vacuna_guardar')}`} onPress={handleSaveVacuna} loading={loading} />
