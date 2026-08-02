@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { LayoutChangeEvent, View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { LineChart } from 'react-native-chart-kit';
 import { Card } from './Card';
 import { AppText } from './AppText';
-import { getItemAsync, setItemAsync } from '../utils/webStorage';
+import { getItemAsync } from '../utils/webStorage';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import API_URL from '../config/api';
@@ -15,15 +16,7 @@ interface PesoRegistro {
   fecha_control: string;
 }
 
-const CHART_HEIGHT = 160;
-const DOT_SIZE = 12;
 const MAX_VISIBLE_POINTS = 6;
-
-const formatShortDate = (date: string) => {
-  const parsed = new Date(date);
-  if (Number.isNaN(parsed.getTime())) return '';
-  return parsed.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
-};
 
 const formatLongDate = (date: string) => {
   const parsed = new Date(date);
@@ -32,10 +25,9 @@ const formatLongDate = (date: string) => {
 };
 
 export const WeightChartCard: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [data, setData] = useState<PesoRegistro[]>([]);
   const [lastPeso, setLastPeso] = useState<number | null>(null);
-  const [chartWidth, setChartWidth] = useState(0);
 
   useEffect(() => {
     const fetchPeso = async () => {
@@ -69,64 +61,12 @@ export const WeightChartCard: React.FC<{ refreshKey?: number }> = ({ refreshKey 
   }, [refreshKey]);
 
   const visibleData = data.slice(-MAX_VISIBLE_POINTS);
-  const chartValues = visibleData.map((d) => d.peso_kg);
-  const rawMax = chartValues.length > 0 ? Math.max(...chartValues) : 70;
-  const rawMin = chartValues.length > 0 ? Math.min(...chartValues) : 55;
-  const padding = Math.max(2, (rawMax - rawMin) * 0.2);
-  const maxVal = Math.ceil(rawMax + padding);
-  const minVal = Math.max(0, Math.floor(rawMin - padding));
-  const range = maxVal - minVal || 1;
-
-  const getY = (val: number) => 12 + ((maxVal - val) / range) * (CHART_HEIGHT - 30);
-
-  const handleChartLayout = (event: LayoutChangeEvent) => {
-    setChartWidth(event.nativeEvent.layout.width);
-  };
-
-  const getPointPositions = () => {
-    const sidePadding = 16;
-    const usableWidth = Math.max(chartWidth - sidePadding * 2, 0);
-
-    return visibleData.map((d, i) => ({
-      x: visibleData.length > 1 ? sidePadding + (i / (visibleData.length - 1)) * usableWidth : chartWidth / 2,
-      y: getY(d.peso_kg),
-      semana: d.semana_gestacion,
-      peso: d.peso_kg,
-      fecha: d.fecha_control,
-    }));
-  };
-
-  const points = chartWidth > 0 ? getPointPositions() : [];
+  const labels = visibleData.map(d => {
+    const date = new Date(d.fecha_control);
+    return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const chartData = visibleData.map(d => d.peso_kg);
   const lastFecha = data.length > 0 ? formatLongDate(data[data.length - 1].fecha_control) : '';
-
-  const renderLines = () => {
-    if (points.length < 2) return null;
-    const lines = [];
-    for (let i = 0; i < points.length - 1; i++) {
-      const p1 = points[i];
-      const p2 = points[i + 1];
-      const dx = p2.x - p1.x;
-      const dy = p2.y - p1.y;
-      const length = Math.sqrt(dx * dx + dy * dy);
-      const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-      lines.push(
-        <View
-          key={`line-${i}`}
-          style={[
-            styles.chartLine,
-            {
-              left: p1.x,
-              top: p1.y,
-              width: length,
-              transform: [{ rotate: `${angle}deg` }],
-              transformOrigin: '0 0',
-            },
-          ]}
-        />
-      );
-    }
-    return lines;
-  };
 
   return (
     <Card style={styles.card}>
@@ -150,60 +90,39 @@ export const WeightChartCard: React.FC<{ refreshKey?: number }> = ({ refreshKey 
         ) : null}
       </View>
 
-      {data.length === 0 ? (
+      {data.length < 2 ? (
         <View style={styles.emptyState}>
           <MaterialCommunityIcons name="scale-bathroom" size={28} color={colors.primary} />
           <AppText variant="caption" color={colors.textSecondary} align="center" style={styles.emptyText}>
-            {t('perfil.sin_peso')}
+            {data.length === 1 ? 'Se necesitan al menos 2 controles para ver la gráfica.' : t('perfil.sin_peso')}
           </AppText>
         </View>
       ) : (
         <>
-          <View style={styles.chartArea}>
-            <View style={styles.yAxis}>
-              <AppText variant="caption" color={colors.textSecondary}>{Math.round(maxVal)}</AppText>
-              <AppText variant="caption" color={colors.textSecondary}>{Math.round((maxVal + minVal) / 2)}</AppText>
-              <AppText variant="caption" color={colors.textSecondary}>{Math.round(minVal)}</AppText>
-            </View>
-            <View style={styles.chart} onLayout={handleChartLayout}>
-              <View style={styles.chartGlow} />
-              <View style={styles.gridLines}>
-                <View style={styles.gridLine} />
-                <View style={styles.gridLine} />
-                <View style={styles.gridLine} />
-              </View>
-
-              {renderLines()}
-
-              {points.map((p, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.dot,
-                    i === points.length - 1 && styles.dotCurrent,
-                    {
-                      left: p.x,
-                      top: p.y,
-                    },
-                  ]}
-                >
-                  <View style={[styles.dotInner, i === points.length - 1 && styles.dotInnerCurrent]} />
-                </View>
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.xAxis}>
-            {points.map((p, i) => (
-              <AppText
-                key={`${p.fecha}-${i}`}
-                variant="caption"
-                color={colors.textSecondary}
-                style={styles.xAxisLabel}
-              >
-                {formatShortDate(p.fecha)}
-              </AppText>
-            ))}
+          <View style={{ alignItems: 'center', marginVertical: spacing.s }}>
+            <LineChart
+              data={{
+                labels,
+                datasets: [{ data: chartData }]
+              }}
+              width={Dimensions.get('window').width - spacing.m * 2 - 32} // Card padding
+              height={180}
+              yAxisSuffix="kg"
+              chartConfig={{
+                backgroundColor: '#ffffff',
+                backgroundGradientFrom: '#ffffff',
+                backgroundGradientTo: '#ffffff',
+                decimalPlaces: 1,
+                color: (opacity = 1) => `rgba(233, 30, 99, ${opacity})`,
+                labelColor: (opacity = 1) => colors.textSecondary,
+                style: { borderRadius: 16 },
+                propsForDots: { r: '4', strokeWidth: '2', stroke: colors.primary }
+              }}
+              bezier
+              style={{
+                borderRadius: 16,
+              }}
+            />
           </View>
 
           <View style={styles.footer}>
@@ -229,7 +148,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.m,
+    marginBottom: spacing.s,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -276,112 +195,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: colors.backgroundSoft,
     padding: spacing.l,
+    marginTop: 8,
   },
   emptyText: {
     marginTop: 8,
     lineHeight: 18,
-  },
-  chartArea: {
-    flexDirection: 'row',
-    height: CHART_HEIGHT,
-    marginBottom: 8,
-  },
-  yAxis: {
-    width: 34,
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    paddingRight: 8,
-    paddingVertical: 8,
-  },
-  chart: {
-    flex: 1,
-    position: 'relative',
-    borderRadius: 18,
-    backgroundColor: '#FFF7F9',
-    overflow: 'hidden',
-    paddingHorizontal: 0,
-  },
-  chartGlow: {
-    position: 'absolute',
-    right: -30,
-    top: -30,
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: 'rgba(226, 78, 119, 0.10)',
-  },
-  dot: {
-    position: 'absolute',
-    width: DOT_SIZE,
-    height: DOT_SIZE,
-    borderRadius: DOT_SIZE / 2,
-    marginLeft: -(DOT_SIZE / 2),
-    marginTop: -(DOT_SIZE / 2),
-    zIndex: 3,
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    borderColor: '#F3B5C5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  dotCurrent: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    marginLeft: -9,
-    marginTop: -9,
-    borderColor: colors.primary,
-    borderWidth: 3,
-  },
-  dotInner: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#F3B5C5',
-  },
-  dotInnerCurrent: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.primary,
-  },
-  chartLine: {
-    position: 'absolute',
-    height: 4,
-    backgroundColor: colors.primary,
-    opacity: 0.35,
-    zIndex: 1,
-    borderRadius: 4,
-  },
-  gridLines: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'space-between',
-  },
-  gridLine: {
-    height: 1,
-    backgroundColor: '#EFD9DF',
-    opacity: 0.7,
-  },
-  xAxis: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginLeft: 34,
-    marginBottom: spacing.s,
-  },
-  xAxisLabel: {
-    flex: 1,
-    textAlign: 'center',
-    fontWeight: '700',
-    fontSize: 11,
   },
   footer: {
     flexDirection: 'row',
@@ -390,6 +208,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.s,
     borderTopWidth: 1,
     borderTopColor: '#F1DCE2',
+    marginTop: spacing.s,
   },
   footerIcon: {
     width: 26,

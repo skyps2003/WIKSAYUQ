@@ -256,59 +256,7 @@ export default function HistorialScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {activeTab === 'controles' && (
           <View style={styles.gridContainer}>
-            {(() => {
-              const withWeight = citas
-                .filter(c => c.controles_prenatales?.[0]?.peso_kg || c.peso_kg)
-                .sort((a, b) => {
-                  const dateA = a.controles_prenatales?.[0]?.fecha_control || a.fecha_programada;
-                  const dateB = b.controles_prenatales?.[0]?.fecha_control || b.fecha_programada;
-                  return new Date(dateA).getTime() - new Date(dateB).getTime();
-                });
 
-              if (withWeight.length >= 2) {
-                const labels = withWeight.map(c => {
-                  const dateStr = c.controles_prenatales?.[0]?.fecha_control || c.fecha_programada;
-                  const date = new Date(dateStr);
-                  return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
-                });
-                const data = withWeight.map(c => Number(c.controles_prenatales?.[0]?.peso_kg || c.peso_kg || 0));
-
-                return (
-                  <View style={{ width: '100%', alignItems: 'center', marginBottom: spacing.l }}>
-                    <AppText variant="h3" style={{ marginBottom: spacing.s, color: colors.primary }}>
-                      {i18n.language === 'qu' ? 'Llasayniy (kg)' : 'Mi Peso (kg)'}
-                    </AppText>
-                    <LineChart
-                      data={{
-                        labels,
-                        datasets: [{ data }]
-                      }}
-                      width={Dimensions.get('window').width - spacing.m * 2}
-                      height={200}
-                      yAxisSuffix="kg"
-                      chartConfig={{
-                        backgroundColor: '#ffffff',
-                        backgroundGradientFrom: '#ffffff',
-                        backgroundGradientTo: '#ffffff',
-                        decimalPlaces: 1,
-                        color: (opacity = 1) => `rgba(233, 30, 99, ${opacity})`,
-                        labelColor: (opacity = 1) => colors.textSecondary,
-                        style: { borderRadius: 16 },
-                        propsForDots: { r: '4', strokeWidth: '2', stroke: colors.primary }
-                      }}
-                      bezier
-                      style={{
-                        marginVertical: 8,
-                        borderRadius: 16,
-                        borderWidth: 1,
-                        borderColor: colors.border,
-                      }}
-                    />
-                  </View>
-                );
-              }
-              return null;
-            })()}
             {citas.map((cita) => {
               // Si hay control asociado
               const control = cita.controles_prenatales && cita.controles_prenatales.length > 0 
