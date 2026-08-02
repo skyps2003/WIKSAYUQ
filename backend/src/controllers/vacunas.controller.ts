@@ -92,13 +92,27 @@ export const addMisVacunas = async (req: Request, res: Response) => {
     }
 
     const vacEstado = estado === 'PENDIENTE' ? 'PENDIENTE' : 'APLICADA';
+    const fechaApli = vacEstado === 'APLICADA' ? new Date(fecha_aplicacion) : null;
+    const fechaProg = vacEstado === 'PENDIENTE' ? new Date(fecha_programada) : null;
+
+    const existing = await prisma.vacunas_gestante.findFirst({
+      where: {
+        embarazo_id: embarazo.id,
+        nombre_vacuna,
+        estado: vacEstado
+      }
+    });
+
+    if (existing) {
+      return res.status(201).json({ success: true, data: existing });
+    }
 
     const nuevaVacuna = await prisma.vacunas_gestante.create({
       data: {
         embarazo_id: embarazo.id,
         establecimiento_id: estId,
-        fecha_aplicacion: vacEstado === 'APLICADA' ? new Date(fecha_aplicacion) : null,
-        fecha_programada: vacEstado === 'PENDIENTE' ? new Date(fecha_programada) : null,
+        fecha_aplicacion: fechaApli,
+        fecha_programada: fechaProg,
         numero_dosis: 1,
         nombre_vacuna,
         descripcion_vacuna: descripcion_vacuna || null,

@@ -125,6 +125,17 @@ export const createControl = async (req: Request, res: Response) => {
       }
     });
 
+    const existing = await prisma.controles_prenatales.findFirst({
+      where: {
+        embarazo_id: embarazo.id,
+        fecha_control: new Date(fecha_control),
+      }
+    });
+
+    if (existing) {
+      return res.status(201).json({ success: true, data: existing });
+    }
+
     const control = await prisma.controles_prenatales.create({
       data: {
         embarazos: { connect: { id: embarazo.id } },

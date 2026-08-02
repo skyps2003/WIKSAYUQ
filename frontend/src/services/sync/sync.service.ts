@@ -39,6 +39,87 @@ const REPOS = {
   contactos: contactoRepo,
 } as const;
 
+export function mapControl(item: any) {
+  return {
+    id: String(item.id),
+    gestante_id: item.gestante_id,
+    fecha_control: item.fecha_control,
+    establecimiento_id: item.establecimiento_id,
+    peso_kg: item.peso_kg ? parseFloat(item.peso_kg) : undefined,
+    presion_sistolica: item.presion_sistolica,
+    presion_diastolica: item.presion_diastolica,
+    semana_gestacion: item.semanas_gestacion || 0,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+    sync_status: 'SYNCED',
+  };
+}
+
+export function mapCita(item: any) {
+  return {
+    id: String(item.id),
+    gestante_id: item.gestante_id,
+    fecha_programada: item.fecha_programada,
+    establecimiento_id: item.establecimiento_id,
+    motivo: item.motivo,
+    tipo: item.tipo || 'OTRO',
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+    sync_status: 'SYNCED',
+  };
+}
+
+export function mapVacuna(item: any) {
+  return {
+    id: String(item.id),
+    gestante_id: item.gestante_id,
+    nombre_vacuna: item.nombre_vacuna,
+    descripcion_vacuna: item.descripcion_vacuna,
+    estado: item.estado || 'PENDIENTE',
+    fecha_aplicacion: item.fecha_aplicacion,
+    fecha_programada: item.fecha_programada,
+    establecimiento_id: item.establecimiento_id,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+    sync_status: 'SYNCED',
+  };
+}
+
+export function mapContacto(item: any) {
+  return {
+    id: String(item.id),
+    gestante_id: item.gestante_id,
+    nombres: item.nombres,
+    parentesco: item.parentesco,
+    telefono_principal: item.telefono_principal || item.telefono,
+    es_contacto_principal: item.es_contacto_principal ? 1 : (item.es_principal ? 1 : 0),
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+    sync_status: 'SYNCED',
+  };
+}
+
+export function mapEstablecimiento(item: any) {
+  return {
+    id: String(item.id),
+    nombre: item.nombre,
+    direccion: item.direccion,
+    latitud: item.latitud ? parseFloat(item.latitud) : undefined,
+    longitud: item.longitud ? parseFloat(item.longitud) : undefined,
+    telefono: item.telefono,
+    horario: item.horario,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+  };
+}
+
+const MAPPERS: Record<string, (item: any) => any> = {
+  controles: mapControl,
+  citas: mapCita,
+  vacunas: mapVacuna,
+  contactos: mapContacto,
+};
+
 export class SyncService {
   static async saveOrQueue({ tableName, data }: SaveOrQueueParams) {
     const repo = REPOS[tableName];
@@ -64,7 +145,9 @@ export class SyncService {
         const response = await this.post(tableName, data);
         const json = await readApiResponse<any>(response);
         if (response.ok && json.success) {
-          await repo.markSynced(localId, { ...json.data, sync_status: 'SYNCED' });
+          const mapper = MAPPERS[tableName];
+          const mappedData = mapper ? mapper(json.data) : json.data;
+          await repo.markSynced(localId, { ...mappedData, sync_status: 'SYNCED' });
           return { success: true, synced: true, data: json.data, localId };
         }
       } catch {
@@ -109,7 +192,9 @@ export class SyncService {
         }
 
         const repo = REPOS[item.table_name];
-        await repo.markSynced(item.id, json.data);
+        const mapper = MAPPERS[item.table_name];
+        const mappedData = mapper ? mapper(json.data) : json.data;
+        await repo.markSynced(item.id, mappedData);
 
         db.runSync('DELETE FROM sync_queue WHERE id = ?', [item.id]);
       } catch (error) {
@@ -164,66 +249,4 @@ export class SyncService {
   }
 }
 
-const mapControl = (item: any) => ({
-  id: String(item.id),
-  gestante_id: item.gestante_id,
-  fecha_control: item.fecha_control,
-  establecimiento_id: item.establecimiento_id,
-  peso_kg: item.peso_kg ? parseFloat(item.peso_kg) : undefined,
-  presion_sistolica: item.presion_sistolica,
-  presion_diastolica: item.presion_diastolica,
-  semana_gestacion: item.semanas_gestacion || 0,
-  created_at: item.created_at,
-  updated_at: item.updated_at,
-  sync_status: 'SYNCED',
-});
 
-const mapCita = (item: any) => ({
-  id: String(item.id),
-  gestante_id: item.gestante_id,
-  fecha_programada: item.fecha_programada,
-  establecimiento_id: item.establecimiento_id,
-  motivo: item.motivo,
-  tipo: item.tipo || 'OTRO',
-  created_at: item.created_at,
-  updated_at: item.updated_at,
-  sync_status: 'SYNCED',
-});
-
-const mapVacuna = (item: any) => ({
-  id: String(item.id),
-  gestante_id: item.gestante_id,
-  nombre_vacuna: item.nombre_vacuna,
-  descripcion_vacuna: item.descripcion_vacuna,
-  estado: item.estado || 'PENDIENTE',
-  fecha_aplicacion: item.fecha_aplicacion,
-  fecha_programada: item.fecha_programada,
-  establecimiento_id: item.establecimiento_id,
-  created_at: item.created_at,
-  updated_at: item.updated_at,
-  sync_status: 'SYNCED',
-});
-
-const mapContacto = (item: any) => ({
-  id: String(item.id),
-  gestante_id: item.gestante_id,
-  nombres: item.nombres,
-  parentesco: item.parentesco,
-  telefono_principal: item.telefono_principal || item.telefono,
-  es_contacto_principal: item.es_contacto_principal ? 1 : (item.es_principal ? 1 : 0),
-  created_at: item.created_at,
-  updated_at: item.updated_at,
-  sync_status: 'SYNCED',
-});
-
-const mapEstablecimiento = (item: any) => ({
-  id: String(item.id),
-  nombre: item.nombre,
-  direccion: item.direccion,
-  latitud: item.latitud ? parseFloat(item.latitud) : undefined,
-  longitud: item.longitud ? parseFloat(item.longitud) : undefined,
-  telefono: item.telefono,
-  horario: item.horario,
-  created_at: item.created_at,
-  updated_at: item.updated_at,
-});
