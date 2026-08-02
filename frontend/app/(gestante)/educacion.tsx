@@ -11,22 +11,31 @@ import { ScreenHeader } from '../../src/components/ScreenHeader';
 
 const videos = [
   {
-    title: 'Guía del Embarazo – Semana a Semana',
-    channel: 'BabyCenter en Español',
-    url: 'https://www.youtube.com/playlist?list=PL6bQ6drR3o_e5dOE6n0B6z-oMA6wUFj8c',
+    title: 'Embarazo para primerizas y no primerizas',
+    channel: 'Creafam Clínicas',
+    url: 'https://www.youtube.com/watch?v=dmSAqDEvvgE',
     lang: 'ES',
   },
   {
-    title: 'Pregnancy: A Week-by-Week Guide',
-    channel: 'BabyCenter',
-    url: 'https://www.youtube.com/playlist?list=PLl9QZjs5Vh1WADGUoqLW4OrLHvFn5FTLU',
-    lang: 'EN',
+    title: 'Lo que no te contaron del embarazo',
+    channel: 'CuriosaMente',
+    url: 'https://www.youtube.com/watch?v=Au7noEQyMMw',
+    lang: 'ES',
+  },
+  {
+    title: 'Orientación sobre el embarazo en quechua',
+    channel: 'Contenido en quechua',
+    url: 'https://www.youtube.com/watch?v=IS9cRxxf4Mo',
+    lang: 'QU',
   },
 ];
 
 export default function EducacionScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
+
+  const currentLang = i18n.language?.startsWith('qu') ? 'QU' : 'ES';
+  const filteredVideos = videos.filter(v => v.lang === currentLang);
 
   const consejos = [
     { icon: 'food-apple', title: t('educacion.nutricion_titulo'), text: t('educacion.nutricion_texto') },
@@ -46,14 +55,14 @@ export default function EducacionScreen() {
           <MaterialCommunityIcons name="play-circle-outline" size={18} color={colors.primary} /> {t('educacion.videos')}
         </AppText>
         <AppText style={styles.sectionDesc}>{t('educacion.videos_desc')}</AppText>
-        {videos.map((v, i) => (
+        {filteredVideos.map((v, i) => (
           <TouchableOpacity key={i} style={styles.videoCard} onPress={() => Linking.openURL(v.url)}>
             <View style={styles.thumb}>
               <MaterialCommunityIcons name="human-pregnant" size={28} color={colors.primary} />
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
               <AppText style={styles.videoTitle}>{v.title}</AppText>
-              <AppText style={styles.videoSub}>{v.channel} · {v.lang === 'ES' ? t('educacion.lang_es') : t('educacion.lang_en')}</AppText>
+              <AppText style={styles.videoSub}>{v.channel} · {v.lang === 'ES' ? t('educacion.lang_es') : t('educacion.lang_qu', 'Quechua')}</AppText>
             </View>
             <MaterialCommunityIcons name="play-circle" size={36} color={colors.primary} />
           </TouchableOpacity>

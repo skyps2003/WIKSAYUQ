@@ -45,9 +45,11 @@ export class SyncService {
     const localId = createLocalId();
     const now = new Date().toISOString();
 
+    const { fum, ...dbData } = data;
+
     const localRecord = {
       id: localId,
-      ...data,
+      ...dbData,
       sync_status: 'PENDING' as const,
       created_at: now,
       updated_at: now,
@@ -205,10 +207,10 @@ const mapVacuna = (item: any) => ({
 const mapContacto = (item: any) => ({
   id: String(item.id),
   gestante_id: item.gestante_id,
-  nombre: item.nombre,
+  nombres: item.nombres,
   parentesco: item.parentesco,
-  telefono: item.telefono_principal || item.telefono,
-  es_principal: item.es_principal ? 1 : 0,
+  telefono_principal: item.telefono_principal || item.telefono,
+  es_contacto_principal: item.es_contacto_principal ? 1 : (item.es_principal ? 1 : 0),
   created_at: item.created_at,
   updated_at: item.updated_at,
   sync_status: 'SYNCED',

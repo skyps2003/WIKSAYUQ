@@ -48,6 +48,20 @@ export const createContacto = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, message: 'Gestante no encontrada' });
     }
 
+    // Prevención de duplicados por reintentos de sincronización
+    const existing = await prisma.contactos_emergencia.findFirst({
+      where: { 
+        gestante_id: gestante.id, 
+        nombres, 
+        telefono_principal, 
+        activo: true 
+      }
+    });
+
+    if (existing) {
+      return res.status(201).json({ success: true, data: existing });
+    }
+
     // Verificar si es el primer contacto
     const count = await prisma.contactos_emergencia.count({
       where: { gestante_id: gestante.id, activo: true }

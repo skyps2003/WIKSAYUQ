@@ -105,10 +105,10 @@ export const initDB = () => {
     CREATE TABLE IF NOT EXISTS contactos (
       id TEXT PRIMARY KEY,
       gestante_id TEXT,
-      nombre TEXT,
+      nombres TEXT,
       parentesco TEXT,
-      telefono TEXT,
-      es_principal INTEGER DEFAULT 0,
+      telefono_principal TEXT,
+      es_contacto_principal INTEGER DEFAULT 0,
       created_at TEXT,
       updated_at TEXT,
       sync_status TEXT DEFAULT 'PENDING'
@@ -133,6 +133,16 @@ export const initDB = () => {
 
   try {
     db.execSync('ALTER TABLE sync_queue ADD COLUMN updated_at DATETIME;');
+  } catch {}
+
+  try {
+    db.execSync('ALTER TABLE contactos RENAME COLUMN nombre TO nombres;');
+  } catch {}
+  try {
+    db.execSync('ALTER TABLE contactos RENAME COLUMN telefono TO telefono_principal;');
+  } catch {}
+  try {
+    db.execSync('ALTER TABLE contactos RENAME COLUMN es_principal TO es_contacto_principal;');
   } catch {}
 };
 

@@ -276,7 +276,7 @@ export default function HistorialScreen() {
                 return (
                   <View style={{ width: '100%', alignItems: 'center', marginBottom: spacing.l }}>
                     <AppText variant="h3" style={{ marginBottom: spacing.s, color: colors.primary }}>
-                      {lang === 'qu' ? 'Llasayniy (kg)' : 'Mi Peso (kg)'}
+                      {i18n.language === 'qu' ? 'Llasayniy (kg)' : 'Mi Peso (kg)'}
                     </AppText>
                     <LineChart
                       data={{
