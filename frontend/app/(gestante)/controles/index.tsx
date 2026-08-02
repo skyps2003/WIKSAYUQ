@@ -18,6 +18,7 @@ import { SyncService } from '../../../src/services/sync/sync.service';
 import API_URL from '../../../src/config/api';
 import { fetchWithTimeout } from '../../../src/utils/fetchWithTimeout';
 import { OfflineDataService } from '../../../src/services/offline-data.service';
+import { controlRepo } from '../../../src/database/repositories/control.repository';
 
 type FormFieldProps = {
   label: string;
@@ -195,7 +196,7 @@ export default function ControlesRegistroScreen() {
 
     try {
       // Validate that there is no control already saved for this specific day
-      const allControles = OfflineDataService.getCachedData('controles');
+      const allControles = await controlRepo.getAll();
       const targetDateStr = dateControl.toISOString().split('T')[0]; // YYYY-MM-DD
       
       const isDuplicate = allControles.some((c: any) => {

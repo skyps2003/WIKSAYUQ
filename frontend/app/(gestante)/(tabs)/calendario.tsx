@@ -100,7 +100,8 @@ export default function CalendarioScreen() {
       // Transform vacunas
       if (dataVacunas.success) {
         dataVacunas.data.forEach((vg: any) => {
-          const dateObj = new Date(vg.fecha_aplicacion);
+          const dateStr = vg.fecha_aplicacion || vg.fecha_programada;
+          const dateObj = new Date(dateStr);
           unified.push({
             id: vg.id,
             type: 'vacuna',
